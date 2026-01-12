@@ -1,7 +1,25 @@
 package main;
 
-import "fmt"
+import (
+	"fmt"
+	"github.com/colfarl/budgy/upload"
+)
+
+func printTransactions(transactions [][]string) {
+	for _, v := range transactions {
+		for _, t := range v {
+			fmt.Print(t, " ")	
+		}
+		fmt.Print("\n")
+	}
+}
 
 func main() {
-	fmt.Println("Hello, world")
+	transactions, err := upload.ReadCsvFile("nov-dec.csv")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	printTransactions(transactions)
 }
