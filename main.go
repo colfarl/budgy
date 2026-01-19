@@ -12,34 +12,26 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-func initDatabase() (*sql.DB, error) {
+func main() {
+	f, err := tea.LogToFile("debug.log", "debug")
+	if err != nil {
+		fmt.Println("fatal:", err)
+		os.Exit(1)
+	}
+	defer f.Close()
+
 	dbURL := os.Getenv("DB_URL")		
 	db, err := sql.Open("sqlite3", dbURL)
 	if err != nil {
-		return nil, err
-	}
-	return db, nil
-}
-
-func main() {
-	db, err := initDatabase()
-	if err != nil {
-		fmt.Println(err)
+		fmt.Println("fatal:", err)
 		os.Exit(1)
 	}
 	defer db.Close()
 	_ = database.New(db)
-	
+
 	p := tea.NewProgram(app.NewModel())
 	if _, err := p.Run(); err != nil {
 		fmt.Print("Unable to start budgy...\n", err)
 		os.Exit(1)
 	}
-	/*
-	_, err = upload.ReadCsvFile("nov-dec.csv")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}	
-	*/
 }

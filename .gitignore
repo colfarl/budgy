@@ -5,6 +5,7 @@
 *.test
 *.out
 
+debug.log
 data/
 .env
 
