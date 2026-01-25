@@ -27,7 +27,7 @@ CREATE TABLE transactions (
 
 	account_id INTEGER NOT NULL,
 	is_income BOOLEAN NOT NULL DEFAULT FALSE,	
-	amount INTEGER NOT NULL,
+	amount REAL NOT NULL,
 	description TEXT NOT NULL,
 	occurred_at TEXT NOT NULL,
 
@@ -42,3 +42,4 @@ CREATE TABLE transactions (
 -- +goose Down
 DROP TABLE transactions;
 DROP TABLE accounts;
+DROP TABLE users;

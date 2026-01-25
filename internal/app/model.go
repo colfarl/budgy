@@ -11,13 +11,15 @@ type Model struct {
 	Accounts		[]database.Account	
 	Transactions	[]database.Account		
 	Logged_in 		bool
+	db				*database.Queries
 
 	LoginInput 		textinput.Model
+
 }
 
-func NewModel() Model {
+func NewModel(q *database.Queries) Model {
 	ti := textinput.New()
-	ti.Placeholder = "Default"
+	ti.Placeholder = "default"
 	ti.Focus()
 	ti.CharLimit = 156
 	ti.Width = 20
@@ -27,6 +29,7 @@ func NewModel() Model {
 		Accounts: nil,
 		Transactions: nil,
 		Logged_in: false,
+		db: q, 
 		LoginInput: ti,
 	}
 }

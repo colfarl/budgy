@@ -22,7 +22,7 @@ type Transaction struct {
 	ID            int64
 	AccountID     int64
 	IsIncome      bool
-	Amount        int64
+	Amount        float64
 	Description   string
 	OccurredAt    string
 	CreatedAt     string

@@ -23,7 +23,7 @@ RETURNING id, account_id, is_income, amount, description, occurred_at, created_a
 type CreateTransactionParams struct {
 	AccountID   int64
 	IsIncome    bool
-	Amount      int64
+	Amount      float64
 	Description string
 	OccurredAt  string
 }

@@ -10,14 +10,17 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {	    
 	
 	case tea.KeyMsg:
-		if !m.Logged_in && msg.String() == "enter" {
-			val := m.LoginInput.Value()			
-			if val == "" {
+		if !m.Logged_in {
+			if msg.String() == "enter" {
+				val := m.LoginInput.Value()			
+				if val == "" {
+					return m, nil
+				}
+				// Handle login
+				m.Logged_in = true
 				return m, nil
 			}
-			m.Logged_in = true
-			return m, nil
-		} 
+		} // no logged in state yet
 
 		if s := msg.String(); s == "ctrl+c" || s == "esc" {
 			return m, tea.Quit
