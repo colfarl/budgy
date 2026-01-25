@@ -1,20 +1,24 @@
 package app
 
 import (
-	"github.com/colfarl/budgy/internal/database"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/colfarl/budgy/internal/database"
 )
 
+type User struct {
+	name string
+	id   int64
+}
+
 type Model struct {
-	User			string
-	Accounts		[]database.Account	
-	Transactions	[]database.Account		
-	Logged_in 		bool
-	db				*database.Queries
+	User         User
+	Accounts     []database.Account
+	Transactions []database.Account
+	Logged_in    bool
+	db           *database.Queries
 
-	LoginInput 		textinput.Model
-
+	LoginInput textinput.Model
 }
 
 func NewModel(q *database.Queries) Model {
@@ -24,13 +28,13 @@ func NewModel(q *database.Queries) Model {
 	ti.CharLimit = 156
 	ti.Width = 20
 
-	return Model {
-		User: "",
-		Accounts: nil,
+	return Model{
+		User:         User{},
+		Accounts:     nil,
 		Transactions: nil,
-		Logged_in: false,
-		db: q, 
-		LoginInput: ti,
+		Logged_in:    false,
+		db:           q,
+		LoginInput:   ti,
 	}
 }
 

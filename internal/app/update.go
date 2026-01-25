@@ -7,12 +7,12 @@ import (
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 
-	switch msg := msg.(type) {	    
-	
+	switch msg := msg.(type) {
+
 	case tea.KeyMsg:
 		if !m.Logged_in {
 			if msg.String() == "enter" {
-				val := m.LoginInput.Value()			
+				val := m.LoginInput.Value()
 				if val == "" {
 					return m, nil
 				}
@@ -27,7 +27,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 	case tea.WindowSizeMsg:
-		return m, nil	
+		return m, nil
 	}
 
 	m.LoginInput, cmd = m.LoginInput.Update(msg)

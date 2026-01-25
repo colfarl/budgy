@@ -1,15 +1,15 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"os"
-	"database/sql"
 
 	"github.com/colfarl/budgy/internal/database"
 	//"github.com/colfarl/budgy/internal/upload"
-	"github.com/colfarl/budgy/internal/app"
-	_"github.com/mattn/go-sqlite3"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/colfarl/budgy/internal/app"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 func main() {
@@ -20,7 +20,7 @@ func main() {
 	}
 	defer f.Close()
 
-	dbURL := os.Getenv("DB_URL")		
+	dbURL := os.Getenv("DB_URL")
 	db, err := sql.Open("sqlite3", dbURL)
 	if err != nil {
 		fmt.Println("fatal:", err)
