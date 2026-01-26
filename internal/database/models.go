@@ -38,4 +38,5 @@ type User struct {
 	UpdatedAt     string
 	DeletedAt     sql.NullString
 	DeletedReason sql.NullString
+	Theme         interface{}
 }

@@ -1,44 +1,70 @@
 package app
 
 import (
+	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/colfarl/budgy/internal/database"
+	"github.com/colfarl/budgy/internal/ui"
 )
 
-type User struct {
-	name string
-	id   int64
+type LoginState int
+
+const (
+	NotLoaded LoginState = iota
+	InputFocus
+	ListFocus
+	Done
+)
+
+type LoginModel struct {	
+	AllUsers     	[]string
+	Input 			textinput.Model
+	UserList	   	list.Model
+	
+	state			LoginState
+	Error 		 	error
 }
 
-type Model struct {
-	User         User
-	Accounts     []database.Account
-	Transactions []database.Account
-	Logged_in    bool
-	db           *database.Queries
+type AppState int
 
-	LoginInput textinput.Model
+const (
+	StateInitial 	AppState = iota	
+	StateLoginLoaded
+	StateLoggedIn
+)
+
+type App struct {
+	User			database.User 				
+	Transactions 	[]database.Account
+	Accounts 		[]database.Account
+	db           	*database.Queries
+
+	state 			AppState
+	Error 		 	error
+	
+	Login			*LoginModel
+	height		 	int	
+	width		 	int	
+	theme			ui.Theme
 }
 
-func NewModel(q *database.Queries) Model {
-	ti := textinput.New()
-	ti.Placeholder = "default"
-	ti.Focus()
-	ti.CharLimit = 156
-	ti.Width = 20
-
-	return Model{
-		User:         User{},
-		Accounts:     nil,
-		Transactions: nil,
-		Logged_in:    false,
-		db:           q,
-		LoginInput:   ti,
+func NewApp(q *database.Queries) *App {	
+	return &App{
+		User:         	database.User{},
+		Accounts:     	nil,
+		Transactions: 	nil,
+		db:           	q,
+		
+		Login: 			&LoginModel{},
+		state: 			StateInitial,	
+		height: 		64,
+		width: 			64,
+		theme: 			*ui.DefaultTheme(),
 	}
 }
 
-func (m Model) Init() tea.Cmd {
+func (a *App) Init() tea.Cmd {
 	return tea.Batch(
 		tea.SetWindowTitle("Budgy"),
 		textinput.Blink,

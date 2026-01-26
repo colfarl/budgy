@@ -1,21 +1,23 @@
 package app
 
 import (
-	"fmt"
+	//"fmt"
+	"github.com/charmbracelet/lipgloss"
 )
 
 var quitStr string = "(ctrl-c or esc to quit)"
+var redStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("9"))
 
-func (m Model) View() string {
+func (a *App) View() string {
 	viewStr := ""
-	switch {
-	case !m.Logged_in:
-		viewStr += fmt.Sprintf(
-			"Enter username \n\n%s\n",
-			m.LoginInput.View(),
-		) + "\n"
+
+	switch a.state{
+	case StateInitial:
+		viewStr += "..."
+	case StateLoginLoaded:
+		viewStr += a.Login.Input.View() + "\n\n" + a.Login.UserList.View()
 	default:
 		viewStr += "Welcome to Budgy"
-	}
+	}	
 	return viewStr + "\n" + quitStr
 }

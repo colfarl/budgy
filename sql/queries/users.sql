@@ -8,6 +8,10 @@ SELECT *
 FROM users 
 WHERE name = ?;
 
+-- name: GetAllUserNames :many
+SELECT name 
+FROM users;
+
 -- name: DeleteAccountByName :exec
 DELETE FROM users 
 WHERE name = ?;

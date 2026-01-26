@@ -6,13 +6,20 @@ import (
 	"os"
 
 	"github.com/colfarl/budgy/internal/database"
+	"github.com/joho/godotenv"
 	//"github.com/colfarl/budgy/internal/upload"
-	tea "github.com/charmbracelet/bubbletea"
 	"github.com/colfarl/budgy/internal/app"
 	_ "github.com/mattn/go-sqlite3"
+	tea "github.com/charmbracelet/bubbletea"
 )
 
 func main() {
+	err := godotenv.Load()
+    if err != nil {
+		fmt.Println("fatal:", err)
+		os.Exit(1)
+    }
+
 	f, err := tea.LogToFile("debug.log", "debug")
 	if err != nil {
 		fmt.Println("fatal:", err)
@@ -28,8 +35,13 @@ func main() {
 	}
 	defer db.Close()
 	queries := database.New(db)
-
-	p := tea.NewProgram(app.NewModel(queries))
+	
+	if err != nil {
+		fmt.Println("fatal:", err)
+		os.Exit(1)
+	}
+	
+	p := tea.NewProgram(app.NewApp(queries))
 	if _, err := p.Run(); err != nil {
 		fmt.Print("Unable to start budgy...\n", err)
 		os.Exit(1)

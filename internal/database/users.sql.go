@@ -12,7 +12,7 @@ import (
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (name) 
 VALUES (?) 
-RETURNING id, name, created_at, updated_at, deleted_at, deleted_reason
+RETURNING id, name, created_at, updated_at, deleted_at, deleted_reason, theme
 `
 
 func (q *Queries) CreateUser(ctx context.Context, name string) (User, error) {
@@ -25,6 +25,7 @@ func (q *Queries) CreateUser(ctx context.Context, name string) (User, error) {
 		&i.UpdatedAt,
 		&i.DeletedAt,
 		&i.DeletedReason,
+		&i.Theme,
 	)
 	return i, err
 }
@@ -39,8 +40,36 @@ func (q *Queries) DeleteAccountByName(ctx context.Context, name string) error {
 	return err
 }
 
+const getAllUserNames = `-- name: GetAllUserNames :many
+SELECT name 
+FROM users
+`
+
+func (q *Queries) GetAllUserNames(ctx context.Context) ([]string, error) {
+	rows, err := q.db.QueryContext(ctx, getAllUserNames)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var name string
+		if err := rows.Scan(&name); err != nil {
+			return nil, err
+		}
+		items = append(items, name)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getUserByName = `-- name: GetUserByName :one
-SELECT id, name, created_at, updated_at, deleted_at, deleted_reason 
+SELECT id, name, created_at, updated_at, deleted_at, deleted_reason, theme 
 FROM users 
 WHERE name = ?
 `
@@ -55,6 +84,7 @@ func (q *Queries) GetUserByName(ctx context.Context, name string) (User, error) 
 		&i.UpdatedAt,
 		&i.DeletedAt,
 		&i.DeletedReason,
+		&i.Theme,
 	)
 	return i, err
 }
