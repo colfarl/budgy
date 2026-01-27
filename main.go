@@ -41,7 +41,7 @@ func main() {
 		os.Exit(1)
 	}
 	
-	p := tea.NewProgram(app.NewApp(queries))
+	p := tea.NewProgram(app.NewApp(db, queries))
 	if _, err := p.Run(); err != nil {
 		fmt.Print("Unable to start budgy...\n", err)
 		os.Exit(1)

@@ -1,9 +1,12 @@
 package app
 
 import (
+	"database/sql"
+
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/colfarl/budgy/internal/store"
 	"github.com/colfarl/budgy/internal/database"
 	"github.com/colfarl/budgy/internal/ui"
 )
@@ -12,6 +15,7 @@ type LoginState int
 
 const (
 	NotLoaded LoginState = iota
+	CacheChecked
 	InputFocus
 	ListFocus
 	Done
@@ -36,9 +40,9 @@ const (
 
 type App struct {
 	User			database.User 				
-	Transactions 	[]database.Account
+	Transactions 	[]database.Transaction
 	Accounts 		[]database.Account
-	db           	*database.Queries
+	Store           *store.Store	
 
 	state 			AppState
 	Error 		 	error
@@ -49,12 +53,12 @@ type App struct {
 	theme			ui.Theme
 }
 
-func NewApp(q *database.Queries) *App {	
+func NewApp(db *sql.DB, q *database.Queries) *App {	
 	return &App{
 		User:         	database.User{},
 		Accounts:     	nil,
 		Transactions: 	nil,
-		db:           	q,
+		Store:          store.New(db, q),
 		
 		Login: 			&LoginModel{},
 		state: 			StateInitial,	

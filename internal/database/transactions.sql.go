@@ -25,7 +25,7 @@ type CreateTransactionParams struct {
 	IsIncome    bool
 	Amount      float64
 	Description string
-	OccurredAt  string
+	OccurredAt  int64
 }
 
 func (q *Queries) CreateTransaction(ctx context.Context, arg CreateTransactionParams) (Transaction, error) {

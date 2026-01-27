@@ -1,7 +1,7 @@
 package app
 
 import (
-	"context"
+	//"context"
 	"errors"
 	"unicode"
 
@@ -30,23 +30,23 @@ func isValidUserName(name string) error {
 	return nil
 }
 
-func (a *App) HandleLogin(name string) (tea.Model, tea.Cmd) {
-	if err := isValidUserName(name); err != nil {
-		a.Error = err		
-		return a, nil
-	}
+// func (a *App) HandleLogin(name string) (tea.Model, tea.Cmd) {
+// 	if err := isValidUserName(name); err != nil {
+// 		a.Error = err		
+// 		return a, nil
+// 	}
+// 
+// 	user, err := a.db.CreateUser(context.Background(), name) 
+// 	if err != nil {
+// 		a.Error = err
+// 		return a, nil
+// 	}
+// 
+// 	a.User = user
+// 	return a, nil
+// }
 
-	user, err := a.db.CreateUser(context.Background(), name) 
-	if err != nil {
-		a.Error = err
-		return a, nil
-	}
-
-	a.User = user
-	return a, nil
-}
-
-func (a *App) LoadLoginState(allUsers []string) (*App, tea.Cmd) {
+func (a *App) LoadLoginFromInput(allUsers []string) (*App, tea.Cmd) {
 	a.Login.AllUsers = allUsers
 	a.Login.state = InputFocus
 	a.Login.Input = ui.NewLoginInput(a.theme)

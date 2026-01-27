@@ -12,10 +12,16 @@ type Account struct {
 	ID            int64
 	UserID        int64
 	Name          string
-	CreatedAt     string
-	UpdatedAt     string
-	DeletedAt     sql.NullString
+	CreatedAt     int64
+	UpdatedAt     int64
+	DeletedAt     sql.NullInt64
 	DeletedReason sql.NullString
+}
+
+type Session struct {
+	ID         int64
+	Username   sql.NullString
+	LastOpened int64
 }
 
 type Transaction struct {
@@ -24,19 +30,19 @@ type Transaction struct {
 	IsIncome      bool
 	Amount        float64
 	Description   string
-	OccurredAt    string
-	CreatedAt     string
-	UpdatedAt     string
-	DeletedAt     sql.NullString
+	OccurredAt    int64
+	CreatedAt     int64
+	UpdatedAt     int64
+	DeletedAt     sql.NullInt64
 	DeletedReason sql.NullString
 }
 
 type User struct {
 	ID            int64
 	Name          string
-	CreatedAt     string
-	UpdatedAt     string
-	DeletedAt     sql.NullString
+	CreatedAt     int64
+	UpdatedAt     int64
+	DeletedAt     sql.NullInt64
 	DeletedReason sql.NullString
 	Theme         interface{}
 }
