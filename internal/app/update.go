@@ -2,47 +2,32 @@ package app
 
 import (
 	"context"
+	"database/sql"
 	//"fmt"
 
 	//"github.com/colfarl/budgy/internal/ui"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/colfarl/budgy/internal/database"
 )
-
-/*
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
-
-func (m *App) SetUpLogin() error {
-	// move into get all accounts wrapper that checks if model has loaded this already
-	registered_names, err := m.db.GetAllUserNames(context.Background())
-	if err != nil {
-		return err
-	}
-
-	ti := ui.NewLoginInput(*ui.DefaultTheme())
-	lst := ui.NewUsersList(*ui.DefaultTheme(), registered_names, m.width, 8)
-	ti.Focus()
-	m.Login.Input = ti
-	m.Login.UserList = lst
-	return nil
-}
-*/
 
 type loginCheckCache struct{}
 type loginGetUsersReq struct{}
+type loginUserReq struct{name string; existing bool}
 
 func (l *LoginModel) Update(msg tea.Msg) (*LoginModel, tea.Cmd) {
+	var cmd tea.Cmd
 	switch l.state {
 	case NotLoaded:
 		return l, func() tea.Msg {return loginCheckCache{}} 
 	case CacheChecked:
 		return l, func() tea.Msg {return loginGetUsersReq{}} 
 	}
-	return l, nil
+	
+	if msg, ok := msg.(tea.KeyMsg); ok && msg.String() == "enter" {
+		return l.HandleLogin()
+	}
+	l.Input, cmd = l.Input.Update(msg)
+	return l, cmd
 }
 
 // App Level update
@@ -65,7 +50,7 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			a.Login.Error = err
 			return a, nil
 		} else if !username.Valid {
-			a.Login.state = CacheChecked 
+			a.Login.state = CacheChecked  
 			return a, nil
 		}
 		user, err := a.Store.LoginAndGetUser(context.Background(), username)
@@ -75,6 +60,14 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return a, nil
 		}
 		a.User = user
+		sessionParam := sql.NullString{String: a.User.Name, Valid: true}
+		if err = a.Store.Q.LoginSession(context.Background(), sessionParam); err != nil {
+			a.Login.Error = err
+			return a, nil
+		}
+		a.Login.state = Done
+		a.state = StateLoggedIn
+		return a, nil
 
 	case loginGetUsersReq:
 		var cmd tea.Cmd
@@ -85,15 +78,44 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		a, cmd = a.LoadLoginFromInput(allUsers) 
-		a.state = StateLoginLoaded
+		a.Login.Input.Focus()	
+		a.Login.state = InputFocus 
 		return a, cmd 
+	
+	case loginUserReq:
+		var user database.User
+		var err error
+
+		if msg.existing {
+			user, err = a.Store.Q.GetUserByName(context.Background(), msg.name)
+			if err != nil {
+				a.Login.Error = err
+				return a, nil
+			}
+		} else {
+			user, err = a.Store.Q.CreateUser(context.Background(), msg.name)
+			if err != nil {
+				a.Login.Error = err
+				return a, nil
+			}
+		}		
+
+		a.User = user
+		sessionParam := sql.NullString{String: a.User.Name, Valid: true}
+		if err = a.Store.Q.LoginSession(context.Background(), sessionParam); err != nil {
+			a.Login.Error = err
+			return a, nil
+		}
+		a.Login.state = Done
+		a.state = StateLoggedIn
+		return a, nil
 	}
 	
 	//No messages received
 	switch a.state {
 	case StateInitial:
-		var cmd tea.Cmd
-		a.Login, cmd = a.Login.Update(msg)
+		var cmd tea.Cmd	
+		a.Login, cmd = a.Login.Update(msg)	
 		return a, cmd
 	default:
 		return a, nil

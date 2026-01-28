@@ -10,8 +10,8 @@ import (
 )
 
 // Login Components will always be in default theme
-type loginUserItem string
-func (i loginUserItem) FilterValue() string { return "" }
+type LoginUserItem string
+func (i LoginUserItem) FilterValue() string { return "" }
 
 type loginUserDelegate struct{
 	theme Theme
@@ -22,7 +22,7 @@ func (d loginUserDelegate) Spacing() int { return 0 }
 func (d loginUserDelegate) Update(_ tea.Msg, _ *list.Model) tea.Cmd { return nil }
 
 func (d loginUserDelegate) Render(w io.Writer, m list.Model, index int, listItem list.Item) {
-	it, ok := listItem.(loginUserItem)
+	it, ok := listItem.(LoginUserItem)
 	if !ok {
 		// maybe should just allow the panic
 		return 
@@ -44,7 +44,7 @@ func (d loginUserDelegate) Render(w io.Writer, m list.Model, index int, listItem
 func NewUsersList(t Theme, names []string, width, height int) list.Model {
 	items := make([]list.Item, len(names))
 	for i := range names {
-		items[i] = loginUserItem(names[i])
+		items[i] = LoginUserItem(names[i])
 	}
 
 	lst := list.New(items, loginUserDelegate{}, width, height)

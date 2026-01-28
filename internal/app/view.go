@@ -13,9 +13,13 @@ func (a *App) View() string {
 
 	switch a.state{
 	case StateInitial:
-		viewStr += "..."
+		switch a.Login.state {
+		case InputFocus, ListFocus:
+			viewStr += a.Login.Input.View() + "\n\n" + a.Login.UserList.View()
+		default:
+			viewStr += "..." // loading or done
+		}
 	case StateLoginLoaded:
-		viewStr += a.Login.Input.View() + "\n\n" + a.Login.UserList.View()
 	default:
 		viewStr += "Welcome to Budgy"
 	}	
