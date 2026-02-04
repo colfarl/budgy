@@ -3,38 +3,53 @@ package store
 import (
 	"context"
 	"database/sql"
-	"errors"
+	"log"
 
+	"github.com/colfarl/budgy/internal/core"
 	"github.com/colfarl/budgy/internal/database"
+	"github.com/colfarl/budgy/internal/infra"
 )
 
 type Store struct {
-	db 		*sql.DB
-	Q		*database.Queries
+	State 			core.State
+
+	Commands 		chan core.Command
+	Events 			chan core.Event
+
+	Runner			infra.EffectRunner
 }
 
-func New(db *sql.DB, q *database.Queries) *Store {
-	return &Store {
-		db: db, 
-		Q: q,
+func New(db *sql.DB, querier *database.Queries) *Store {
+	return &Store{
+		State: 		core.NewState(),
+		Commands: 	make(chan core.Command),
+		Events: 	make(chan core.Event),
+		Runner: 	infra.NewEffectRunner(db, querier),
 	}
 }
 
-func (s *Store) LoginAndGetUser (ctx context.Context, username sql.NullString) (database.User, error) {
-	if !username.Valid {
-		return database.User{}, errors.New("Cannot login null user")
-	}
-
-	err := s.Q.LoginSession(ctx, username)
-	if err != nil {
-		return database.User{}, err
-	}
-
-	user, err := s.Q.GetUserByName(ctx, username.String)
-	if err != nil {
-		return database.User{}, err
-	}
-	return user, nil
+func (s *Store) emit(e core.Event) {
+	log.Printf("EVENT: %T", e)
+	s.State = core.Transition(s.State, e)	
+	s.Events <- e
 }
 
-// TODO: Write in transaction helpers
+func (s *Store) AppRun(ctx context.Context) {
+	for {
+		select {
+		case <- ctx.Done():
+			return
+
+		case cmd := <- s.Commands:
+			log.Printf("COMMAND: %T", cmd)
+			evs, fxs := core.Evaluate(s.State, cmd)
+			for _, ev := range evs {
+				s.emit(ev)
+			}
+
+			for _, fx := range fxs {
+				s.Runner.Run(ctx, fx, s.emit) // potentially go...
+			}
+		}
+	}
+}

@@ -7,7 +7,6 @@ import (
 func DefaultTheme() *Theme {
 	var t Theme
 	
-	// AI generated colorscheme, play around with this
 	var (
 		fg       = lipgloss.AdaptiveColor{Light: "235", Dark: "252"}
 		muted    = lipgloss.AdaptiveColor{Light: "245", Dark: "243"}
