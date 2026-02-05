@@ -30,14 +30,17 @@ func (q *Queries) CreateUser(ctx context.Context, name string) (User, error) {
 	return i, err
 }
 
-const deleteAccountByName = `-- name: DeleteAccountByName :exec
+const deleteUserByName = `-- name: DeleteUserByName :execrows
 DELETE FROM users 
 WHERE name = ?
 `
 
-func (q *Queries) DeleteAccountByName(ctx context.Context, name string) error {
-	_, err := q.db.ExecContext(ctx, deleteAccountByName, name)
-	return err
+func (q *Queries) DeleteUserByName(ctx context.Context, name string) (int64, error) {
+	result, err := q.db.ExecContext(ctx, deleteUserByName, name)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
 }
 
 const getAllUserNames = `-- name: GetAllUserNames :many

@@ -10,8 +10,10 @@ import (
 func (m Model) View() string {
 	switch m.state {
 	case Login:
+		if m.ActiveTheme == nil {
+			return "UH OH"
+		}
 		return layoutLogin(*m.ActiveTheme, m.Login, m.store.State.Error)
-
 	case Home:
 		return "Logged in"
 	}

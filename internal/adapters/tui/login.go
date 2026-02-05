@@ -38,6 +38,7 @@ func (l LoginScreen) GetActiveHelp () help.KeyMap {
 			return nil
 	}
 }
+
 func NewLoginScreen(t ui.Theme, names []string, width, height int) *LoginScreen {
 	return &LoginScreen{
 		TextInput:  ui.NewLoginInput(t),			

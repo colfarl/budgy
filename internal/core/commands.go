@@ -11,6 +11,9 @@ func (LoadAllUsers) isCommand() {}
 type CreateUser struct{ Username string }
 func (CreateUser) isCommand() {}
 
+type DeleteUser struct{ Username string }
+func (DeleteUser) isCommand() {}
+
 type SetActiveUser struct{ Username string }
 func (SetActiveUser) isCommand() {}
 

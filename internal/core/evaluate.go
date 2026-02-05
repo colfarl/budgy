@@ -1,5 +1,7 @@
 package core
 
+import "log"
+
 func Evaluate (s State, c Command) ([]Event, []Effect) {
 	switch cmd := c.(type) {
 
@@ -14,7 +16,12 @@ func Evaluate (s State, c Command) ([]Event, []Effect) {
 		return evalClearActiveUser(s)		
 
 	case LoadAllUsers:
+		log.Printf("Called Load Users")
 		return nil, []Effect{FxLoadAllUsers{}}
+	
+	case DeleteUser:
+		log.Printf("Evaluated DeleteUser")
+		return nil, []Effect{FxDeleteUser{Username: &cmd.Username}}
 	}
 	return nil, nil
 }
@@ -32,7 +39,10 @@ func evalSetActiveUser(s State, username string) ([]Event, []Effect) {
 		return nil, nil
 	}
 	evs := []Event{}
-	fxs := []Effect{FxSetSessionUser{Username: &username}}
+	fxs := []Effect{
+		FxCreateUser{Username: &username}, // this shouldn't have to be done every time we set active user
+		FxSetSessionUser{Username: &username},
+	}
 	return evs, fxs
 }
 

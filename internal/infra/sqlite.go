@@ -4,9 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"log"
 
 	"github.com/colfarl/budgy/internal/core"
 	"github.com/colfarl/budgy/internal/database"
+	"github.com/mattn/go-sqlite3"
 )
 
 type SqliteRunner struct{
@@ -29,6 +31,12 @@ func (sr SqliteRunner) Run(ctx context.Context, fx core.Effect, emit func(core.E
 
 	case core.FxLoadAllUsers:
 		return sr.sqliteLoadUsers(ctx, emit)	
+
+	case core.FxCreateUser:
+		return sr.sqliteCreateUser(ctx, v, emit)	
+
+	case core.FxDeleteUser:
+		return sr.sqliteDeleteUser(ctx, v, emit)	
 	}
 	return false
 }
@@ -66,6 +74,50 @@ func (sr SqliteRunner) sqliteLoadUsers(ctx context.Context, emit func(core.Event
 	}	
 	
 	emit(core.UsersLoaded{Usernames: users})
+	return true
+}
+
+func (sr SqliteRunner) sqliteDeleteUser(ctx context.Context, fx core.FxDeleteUser, emit func(core.Event)) bool {
+	log.Printf("running effect delete user")
+	if fx.Username == nil {
+		emit(core.DBFailure{Err: ErrNilUsername})
+		return true
+	}
+
+	rows, err := sr.Q.DeleteUserByName(ctx, *fx.Username)	
+	if err != nil {
+		emit(core.DBFailure{Err: ErrNilUsername})
+		return true
+	} else if rows == 0 {
+		// Unsure if this should be handled 
+		log.Printf("ATTEMPTED TO DELETE NOT EXISTENT USER")
+		return true
+	}
+	
+	emit(core.UserDeleted{Username: *fx.Username})
+	return true
+}
+
+func (sr SqliteRunner) sqliteCreateUser(ctx context.Context, fx core.FxCreateUser, emit func(core.Event)) bool {
+	if fx.Username == nil {
+		emit(core.DBFailure{Err: ErrNilUsername})
+		return true
+	}
+	_, err := sr.Q.CreateUser(ctx, *fx.Username)	
+	if err != nil {
+		var sqliteErr sqlite3.Error
+		if errors.As(err, &sqliteErr) {
+			if sqliteErr.ExtendedCode == sqlite3.ErrConstraintUnique {
+				// unique constraint violation do nothing
+				return true 
+			}
+		} 
+		emit(core.DBFailure{Err: ErrNilUsername})
+		return true
+	}		
+
+	//not handled currently: think I need to catch and recatch if I emit this
+	//emit(core.UserCreated{Username: user.Name})
 	return true
 }
 

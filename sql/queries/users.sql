@@ -12,7 +12,7 @@ WHERE name = ?;
 SELECT name 
 FROM users;
 
--- name: DeleteAccountByName :exec
+-- name: DeleteUserByName :execrows
 DELETE FROM users 
 WHERE name = ?;
 

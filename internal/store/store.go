@@ -48,7 +48,7 @@ func (s *Store) AppRun(ctx context.Context) {
 			}
 
 			for _, fx := range fxs {
-				s.Runner.Run(ctx, fx, s.emit) // potentially go...
+				s.Runner.Run(ctx, fx, s.emit) // potentially goroutine...
 			}
 		}
 	}

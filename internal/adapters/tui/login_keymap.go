@@ -47,6 +47,7 @@ type LoginListKeys struct {
 	Switch 		key.Binding
 	Submit		key.Binding
 	Up			key.Binding
+	Delete		key.Binding
 	Down		key.Binding
 	Help		key.Binding
 }
@@ -67,11 +68,15 @@ func NewLoginListKeys () LoginListKeys {
 		),
 		Up: key.NewBinding(
 			key.WithKeys("k", "up"),
-			key.WithHelp("↓/k", "up"),
+			key.WithHelp("↑/k", "up"),
 		),
 		Down: key.NewBinding(
 			key.WithKeys("j", "down"),
 			key.WithHelp("↓/j", "down"),
+		),
+		Delete: key.NewBinding(
+			key.WithKeys("ctrl+d"),
+			key.WithHelp("ctrl+d", "delete user"),
 		),
 		Help: key.NewBinding(
 			key.WithKeys("?"),
@@ -85,5 +90,5 @@ func (k LoginListKeys) ShortHelp() []key.Binding {
 }
 
 func (k LoginListKeys) FullHelp() [][]key.Binding {
-	return [][]key.Binding{{k.Help, k.Quit},{k.Switch, k.Submit, k.Up, k.Down}}
+	return [][]key.Binding{{k.Help, k.Quit},{k.Switch, k.Submit}, {k.Up, k.Down}, {k.Delete}}
 }
