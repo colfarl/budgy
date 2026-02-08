@@ -1,48 +1,38 @@
-package main 
+package main
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
+	"log"
 	"os"
 
-	"github.com/colfarl/budgy/internal/database"
 	"github.com/colfarl/budgy/internal/store"
-	"github.com/joho/godotenv"
 
-	//"github.com/colfarl/budgy/internal/upload"
-	"github.com/colfarl/budgy/internal/adapters/tui"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/colfarl/budgy/internal/adapters/tui"
+	"github.com/colfarl/budgy/internal/infra"
 	_ "github.com/mattn/go-sqlite3"
 )
 
-func main() {
-	err := godotenv.Load()
-    if err != nil {
-		fmt.Println("fatal:", err)
-		os.Exit(1)
-    }
 
-	f, err := tea.LogToFile("debug.log", "debug")
+
+func main() {	
+	f, err := infra.SetLogger()
 	if err != nil {
-		fmt.Println("fatal:", err)
-		os.Exit(1)
+		log.Fatal("FATAL:", err)
 	}
 	defer f.Close()
 
-	dbURL := os.Getenv("DB_URL")
-	db, err := sql.Open("sqlite3", dbURL)
+	db, queries, err := infra.LoadDb()
 	if err != nil {
-		fmt.Println("fatal:", err)
-		os.Exit(1)
+		log.Fatal("FATAL:", err)
 	}
 	defer db.Close()
-	queries := database.New(db)
 	
 	s := store.New(db, queries)
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-
 	go s.AppRun(ctx)	
 		
 	p := tea.NewProgram(tui.NewModel(s))

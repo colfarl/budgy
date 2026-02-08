@@ -5,9 +5,10 @@ import (
 	"database/sql"
 	"log"
 
+
 	"github.com/colfarl/budgy/internal/core"
-	"github.com/colfarl/budgy/internal/database"
 	"github.com/colfarl/budgy/internal/infra"
+	"github.com/colfarl/budgy/internal/database"
 )
 
 type Store struct {
@@ -19,12 +20,12 @@ type Store struct {
 	Runner			infra.EffectRunner
 }
 
-func New(db *sql.DB, querier *database.Queries) *Store {
+func New(db *sql.DB, queries *database.Queries) *Store {
 	return &Store{
 		State: 		core.NewState(),
 		Commands: 	make(chan core.Command),
 		Events: 	make(chan core.Event),
-		Runner: 	infra.NewEffectRunner(db, querier),
+		Runner: 	infra.NewEffectRunner(db, queries),
 	}
 }
 
