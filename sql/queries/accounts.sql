@@ -10,5 +10,5 @@ WHERE name = ?;
 
 -- name: DeleteAccount :exec
 DELETE FROM accounts
-WHERE name = ?;
+WHERE name = ? and user_id = ?;
 

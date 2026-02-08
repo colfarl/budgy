@@ -26,3 +26,19 @@ func (UserDeleted) isEvent() {}
 
 type EffectUnhandled struct{ Kind string }
 func (EffectUnhandled) isEvent() {}
+
+// ============================== Account Events ==============================
+type AccountCreated struct {
+	UserID 		int64
+	AccountName string
+	Username 	string
+	AccountID 	int64
+}
+func (AccountCreated) isEvent() {}
+
+type AccountDeleted struct {
+	UserID 		int64
+	AccountName string
+	Username 	string
+}
+func (AccountDeleted) isEvent() {}

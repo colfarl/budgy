@@ -5,6 +5,7 @@ import "log"
 func Evaluate (s State, c Command) ([]Event, []Effect) {
 	switch cmd := c.(type) {
 
+	//User / Session Level 
 	case LoadSession:
 		return evalLoadSession(s)
 
@@ -15,6 +16,10 @@ func Evaluate (s State, c Command) ([]Event, []Effect) {
 	case ClearActiveUser:
 		return evalClearActiveUser(s)		
 
+	case CreateUser:
+		u := cmd.Username
+		return evalCreateUser(s, u)		
+
 	case LoadAllUsers:
 		log.Printf("Called Load Users")
 		return nil, []Effect{FxLoadAllUsers{}}
@@ -22,8 +27,35 @@ func Evaluate (s State, c Command) ([]Event, []Effect) {
 	case DeleteUser:
 		log.Printf("Evaluated DeleteUser")
 		return nil, []Effect{FxDeleteUser{Username: &cmd.Username}}
+	
+	//Account Level 
+	case CreateAccount:
+		return evalCreateAccount(s, cmd.Username, cmd.AccountName)		
+
+	case DeleteAccount:
+		return evalDeleteAccount(s, cmd.Username, cmd.AccountName)
 	}
+
 	return nil, nil
+}
+
+func evalDeleteAccount(_ State, username string, accountName string) ([]Event, []Effect) {		
+	evs := []Event{}
+	fxs := []Effect{FxDeleteAccount{Username: username, AccountName: accountName}} 
+	return evs, fxs
+}
+
+func evalCreateAccount(_ State, username string, accountName string) ([]Event, []Effect) {		
+	evs := []Event{}
+	fxs := []Effect{FxCreateAccount{Username: username, AccountName: accountName}} 
+	return evs, fxs
+}
+
+func evalCreateUser(_ State, username string) ([]Event, []Effect) {	
+	// maybe do some handling
+	evs := []Event{}
+	fxs := []Effect{FxCreateUser{Username: &username}} 
+	return evs, fxs
 }
 
 func evalClearActiveUser(s State) ([]Event, []Effect) {

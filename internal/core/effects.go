@@ -2,6 +2,7 @@ package core
 
 type Effect interface{ isEffect() }
 
+// ============================== User Commands ==============================
 type FxLoadSession struct{}
 func (FxLoadSession) isEffect() {}
 
@@ -19,3 +20,16 @@ func (FxDeleteUser) isEffect() {}
 
 type FxClearSessionUser struct{}
 func (FxClearSessionUser) isEffect() {}
+
+// ============================== Account Commands ==============================
+type FxCreateAccount struct{
+	Username 	string
+	AccountName string
+}
+func (FxCreateAccount) isEffect() {}
+
+type FxDeleteAccount struct{
+	Username 	string
+	AccountName string
+}
+func (FxDeleteAccount) isEffect() {}

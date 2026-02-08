@@ -26,7 +26,7 @@ func LoadDb() (*sql.DB, *database.Queries, error) {
 }
 
 func SetLogger() (*os.File, error) {
-	f, err := tea.LogToFile("debug.log", "debug")
+	f, err := tea.LogToFile("tui.log", "tui")
 	if err != nil {
 		return nil, err	
 	}

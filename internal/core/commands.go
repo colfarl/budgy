@@ -19,3 +19,10 @@ func (SetActiveUser) isCommand() {}
 
 type ClearActiveUser struct{}
 func (ClearActiveUser) isCommand() {}
+
+// ============================== Account Commands ==============================
+type CreateAccount struct{Username string; AccountName string}
+func (CreateAccount) isCommand() {}
+
+type DeleteAccount struct{Username string; AccountName string}
+func (DeleteAccount) isCommand() {}

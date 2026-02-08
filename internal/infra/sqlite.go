@@ -37,6 +37,13 @@ func (sr SqliteRunner) Run(ctx context.Context, fx core.Effect, emit func(core.E
 
 	case core.FxDeleteUser:
 		return sr.sqliteDeleteUser(ctx, v, emit)	
+	
+	// ============================== Account ==============================
+	case core.FxCreateAccount:
+		return sr.sqliteCreateAccount(ctx, v, emit)	
+
+	case core.FxDeleteAccount:
+		return sr.sqliteDeleteAccount(ctx, v, emit)	
 	}
 	return false
 }
@@ -103,7 +110,7 @@ func (sr SqliteRunner) sqliteCreateUser(ctx context.Context, fx core.FxCreateUse
 		emit(core.DBFailure{Err: ErrNilUsername})
 		return true
 	}
-	_, err := sr.Q.CreateUser(ctx, *fx.Username)	
+	user, err := sr.Q.CreateUser(ctx, *fx.Username)	
 	if err != nil {
 		var sqliteErr sqlite3.Error
 		if errors.As(err, &sqliteErr) {
@@ -116,8 +123,7 @@ func (sr SqliteRunner) sqliteCreateUser(ctx context.Context, fx core.FxCreateUse
 		return true
 	}		
 
-	//not handled currently: think I need to catch and recatch if I emit this
-	//emit(core.UserCreated{Username: user.Name})
+	emit(core.UserCreated{Username: user.Name})
 	return true
 }
 
@@ -134,6 +140,60 @@ func (sr SqliteRunner) sqliteLoadSession(ctx context.Context, emit func(core.Eve
 	}
 	
 	emit(core.ActiveUserSet{Username: prev.String})
+	return true
+}
+
+func (sr SqliteRunner) sqliteCreateAccount(ctx context.Context, fx core.FxCreateAccount, emit func(core.Event)) bool {
+	user, err := sr.Q.GetUserByName(ctx, fx.Username)	
+	if err != nil {
+		emit(core.DBFailure{Err: err})
+		return true 
+	}
+	params := database.CreateAccountParams{
+		Name: fx.AccountName,	
+		UserID: user.ID,
+	}
+
+	account, err := sr.Q.CreateAccount(ctx, params)
+	if err != nil {
+		emit(core.DBFailure{Err: err})
+		return true
+	}
+
+	values := core.AccountCreated{
+		UserID: user.ID,	
+		Username: user.Name,	
+		AccountName: account.Name,	
+		AccountID: account.ID,	
+	}
+	emit(values)
+	return true
+}
+
+func (sr SqliteRunner) sqliteDeleteAccount(ctx context.Context, fx core.FxDeleteAccount, emit func(core.Event)) bool {
+	user, err := sr.Q.GetUserByName(ctx, fx.Username)	
+	if err != nil {
+		emit(core.DBFailure{Err: err})
+		return true 
+	}
+
+	params := database.DeleteAccountParams{
+		Name: fx.AccountName,	
+		UserID: user.ID,
+	}
+
+	err = sr.Q.DeleteAccount(ctx, params)
+	if err != nil {
+		emit(core.DBFailure{Err: err})
+		return true
+	}
+
+	values := core.AccountDeleted{
+		UserID: user.ID,	
+		Username: user.Name,	
+		AccountName: fx.AccountName,	
+	}
+	emit(values)
 	return true
 }
 

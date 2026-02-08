@@ -12,13 +12,14 @@ CREATE TABLE users (
 CREATE TABLE accounts (
 	id INTEGER PRIMARY KEY AUTOINCREMENT,
 	user_id INTEGER NOT NULL,
-	name TEXT NOT NULL UNIQUE,
+	name TEXT NOT NULL,
 
 	created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
 	updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
 	deleted_at INTEGER,
 	deleted_reason TEXT,
-	FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+	FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
+	UNIQUE (name, user_id)
 );
 
 CREATE TABLE transactions (

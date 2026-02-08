@@ -52,6 +52,15 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.store.Commands <- core.LoadAllUsers{}
 		return m, eventCatch(m.store.Events)		
 	
+	case core.UserCreated:
+		added := append(m.Login.UserList.Items(), ui.LoginUserItem(msg.Username))
+		new_users := make([]string, len(added))
+		for i := range added {
+			new_users[i] = string(added[i].(ui.LoginUserItem))
+		}
+		m.Login.UserList = ui.NewUsersList(*m.ActiveTheme, new_users, m.w, m.Login.UserList.Height())
+		return m, eventCatch(m.store.Events)
+		
 	case core.UsersLoaded:
 		m.Login = NewLoginScreen(*ui.DefaultTheme(), msg.Usernames, m.w, m.h)
 		m.state = Login
@@ -72,7 +81,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		m.Login.UserList = ui.NewUsersList(*m.ActiveTheme, new_users, m.w, m.Login.UserList.Height())
 		return m, eventCatch(m.store.Events)
-
 	}
 			
 	return m, nil

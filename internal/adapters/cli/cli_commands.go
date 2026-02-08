@@ -1,40 +1,26 @@
 package cli
 
 import (
-	"fmt"
-
+	"context"
 	"github.com/colfarl/budgy/internal/store"
 )
 
-type Context struct {
-	Debug bool
-	Store store.Store
+type Context struct {	
+	Ctx	   	context.Context
+	Store 	*store.Store
 }
 
-type RmCmd struct {
-  Force     bool `help:"Force removal."`
-  Recursive bool `help:"Recursively remove files."`
-
-  Paths []string `arg:"" name:"path" help:"Paths to remove." type:"path"`
+type CliCommands struct {
+	User struct {
+		Add    UserAddCmd    	`cmd:"" help:"Add a user."`
+		List   UserListCmd   	`cmd:"" help:"List users."`
+		Delete UserDeleteCmd	`cmd:"" help:"Delete a user."`
+	}	`cmd:"" help:"User management."`
+	Account struct {
+		Add AccountAddCmd 		`cmd:"" help:"Add account to user"`
+		Delete AccountDeleteCmd 	`cmd:"" help:"Remove account from user"`
+		List AccountListCmd  	`cmd:"" help:"list all accounts for user"`
+	} `cmd:"" help:"Account management."`
 }
 
-func (r *RmCmd) Run(ctx *Context) error {
-  fmt.Println("rm", r.Paths)
-  return nil
-}
 
-type LsCmd struct {
-  Paths []string `arg:"" optional:"" name:"path" help:"Paths to list." type:"path"`
-}
-
-func (l *LsCmd) Run(ctx *Context) error {
-  fmt.Println("ls", l.Paths)
-  return nil
-}
-
-var CliCommands struct {
-  Debug bool `help:"Enable debug mode."`
-
-  Rm RmCmd `cmd:"" help:"Remove files."`
-  Ls LsCmd `cmd:"" help:"List paths."`
-}

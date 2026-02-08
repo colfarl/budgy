@@ -8,6 +8,9 @@ func Transition(s State, e Event) (State) {
 	case ActiveUserSet:
 		s.ActiveUser = &v.Username
 	
+	case DBFailure:
+		s.Error = v.Err
+	
 	}
 	return s
 }

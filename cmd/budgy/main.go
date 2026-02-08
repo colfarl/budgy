@@ -1,8 +1,10 @@
 package main
 
 import (
-	"log"
+	"os"
 	"context"
+	"log"
+	"time"
 
 	"github.com/alecthomas/kong"
 	"github.com/colfarl/budgy/internal/adapters/cli"
@@ -18,13 +20,25 @@ func main() {
 	}
 	defer db.Close()
 
-	s := store.New(db, q)
+	file, err := os.OpenFile("cli.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatalf("Failed to open log file: %v", err)
+	}
+	defer file.Close() 
+	log.SetOutput(file)
 
-	ctx, cancel := context.WithCancel(context.Background())
+	s := store.New(db, q)
+	
+	appctx := context.Background()
+	ctx, cancel := context.WithCancel(appctx)
 	defer cancel()
 	go s.AppRun(ctx)	
 		
-	cmd := kong.Parse(&cli.CliCommands)
-	err = cmd.Run(&cli.Context{Debug: cli.CliCommands.Debug})
+	ctx, timeout := context.WithTimeout(appctx, 2 * time.Second)
+	defer timeout()
+
+	var input cli.CliCommands
+	cmd := kong.Parse(&input)
+	err = cmd.Run(&cli.Context{Store: s, Ctx: ctx})
 	cmd.FatalIfErrorf(err)
 }
