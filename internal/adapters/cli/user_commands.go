@@ -15,7 +15,7 @@ func (c *UserAddCmd) Run(binds *Context) error {
 	for {
 		select {
 		case <-binds.Ctx.Done():
-			return fmt.Errorf("TIMEOUT OCCURRED: %v", binds.Store.State.Error)
+			return fmt.Errorf("TIMEOUT OCCURRED: %v\n", binds.Store.State.Error)
 
 		case event := <-binds.Store.Events:
 			if _, ok := event.(core.UserCreated); ok {
@@ -25,7 +25,7 @@ func (c *UserAddCmd) Run(binds *Context) error {
 			if binds.Store.State.Error != nil {
 				return binds.Store.State.Error
 			}
-			return fmt.Errorf("Unknown error while creating user")		
+			return fmt.Errorf("Unknown error while creating user\n")		
 		}
 	}
 }
@@ -41,6 +41,9 @@ func (c *UserListCmd) Run(binds *Context) error {
 
 		case event := <-binds.Store.Events:
 			if v, ok := event.(core.UsersLoaded); ok {
+				if len(v.Usernames) == 0{
+					fmt.Println("No users registered")
+				}
 				for i, u := range v.Usernames {
 					fmt.Printf("%d. %s\n", i + 1, u)
 				}

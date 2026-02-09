@@ -16,11 +16,19 @@ type CliCommands struct {
 		List   UserListCmd   	`cmd:"" help:"List users."`
 		Delete UserDeleteCmd	`cmd:"" help:"Delete a user."`
 	}	`cmd:"" help:"User management."`
+
 	Account struct {
-		Add AccountAddCmd 		`cmd:"" help:"Add account to user"`
+		Add AccountAddCmd 			`cmd:"" help:"Add account to user"`
 		Delete AccountDeleteCmd 	`cmd:"" help:"Remove account from user"`
-		List AccountListCmd  	`cmd:"" help:"list all accounts for user"`
+		List AccountListCmd  		`cmd:"" help:"list all accounts for user"`
 	} `cmd:"" help:"Account management."`
+
+	Txn struct {
+		Add 		TxnAddCmd			`cmd:"" help:"Add account to user"`
+		Delete 		TxnDeleteCmd 		`cmd:"" help:"Remove account from user"`
+		List 		TxnListCmd  		`cmd:"" help:"list all accounts for user"`
+		ImportFile  TxnImportFileCmd	`cmd:"" help:"import transactions from a file."`
+	}  `cmd:"" help:"Transaction management"`
 }
 
 

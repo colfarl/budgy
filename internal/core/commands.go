@@ -26,3 +26,33 @@ func (CreateAccount) isCommand() {}
 
 type DeleteAccount struct{Username string; AccountName string}
 func (DeleteAccount) isCommand() {}
+
+type ListAccounts struct{Username string}
+func (ListAccounts) isCommand() {}
+
+// ============================== Transaction Commands ===============================
+type CreateTxn struct{
+	Username 	string
+	AccountName string
+	Amount		float64
+	Description string
+	Date		string
+	Income		bool
+}
+func (CreateTxn) isCommand() {}
+
+type DeleteTxn struct{ID int64}
+func (DeleteTxn) isCommand() {}
+
+//needs to have date filters
+type LoadAccountTxns struct{Username string; AccountName string}
+func (LoadAccountTxns) isCommand() {}
+
+type ImportTxnsFromFile struct {
+	Username 	string
+	AccountName string
+	FileName	string
+	FileType	string
+	FileOrigin	string // Bank or place where it came from 
+}
+func (ImportTxnsFromFile) isCommand() {}

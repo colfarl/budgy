@@ -11,6 +11,8 @@ func Transition(s State, e Event) (State) {
 	case DBFailure:
 		s.Error = v.Err
 	
+	case GeneralFailure:
+		s.Error = v.Err
 	}
 	return s
 }

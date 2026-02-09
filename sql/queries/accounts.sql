@@ -6,7 +6,12 @@ RETURNING *;
 -- name: GetAccountByName :one
 SELECT * 
 FROM accounts
-WHERE name = ?;
+WHERE name = ? and user_id = ?;
+
+-- name: GetAllAccounts :many
+SELECT * 
+FROM accounts
+WHERE user_id = ?;
 
 -- name: DeleteAccount :exec
 DELETE FROM accounts

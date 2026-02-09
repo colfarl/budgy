@@ -6,6 +6,7 @@
 *.out
 
 debug.log
+*.log
 data/
 .env
 

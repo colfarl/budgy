@@ -52,6 +52,56 @@ func (q *Queries) CreateTransaction(ctx context.Context, arg CreateTransactionPa
 	return i, err
 }
 
+const createTransactionFromNames = `-- name: CreateTransactionFromNames :one
+INSERT INTO transactions (
+	account_id,
+	is_income,
+	amount,
+	description,
+	occurred_at
+) VALUES ((
+	SElECT a.id 
+	FROM accounts a 
+		JOIN users u on a.user_id = u.ID
+	WHERE u.name = ? AND a.name = ?
+	), ?, ?, ?, ?) 
+RETURNING id, account_id, is_income, amount, description, occurred_at, created_at, updated_at, deleted_at, deleted_reason
+`
+
+type CreateTransactionFromNamesParams struct {
+	Name        string
+	Name_2      string
+	IsIncome    bool
+	Amount      float64
+	Description string
+	OccurredAt  int64
+}
+
+func (q *Queries) CreateTransactionFromNames(ctx context.Context, arg CreateTransactionFromNamesParams) (Transaction, error) {
+	row := q.db.QueryRowContext(ctx, createTransactionFromNames,
+		arg.Name,
+		arg.Name_2,
+		arg.IsIncome,
+		arg.Amount,
+		arg.Description,
+		arg.OccurredAt,
+	)
+	var i Transaction
+	err := row.Scan(
+		&i.ID,
+		&i.AccountID,
+		&i.IsIncome,
+		&i.Amount,
+		&i.Description,
+		&i.OccurredAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+		&i.DeletedReason,
+	)
+	return i, err
+}
+
 const deleteTransaction = `-- name: DeleteTransaction :exec
 DELETE FROM transactions
 WHERE id = ?
@@ -60,4 +110,50 @@ WHERE id = ?
 func (q *Queries) DeleteTransaction(ctx context.Context, id int64) error {
 	_, err := q.db.ExecContext(ctx, deleteTransaction, id)
 	return err
+}
+
+const getAccountTxnFromNames = `-- name: GetAccountTxnFromNames :many
+SELECT t.id, t.account_id, t.is_income, t.amount, t.description, t.occurred_at, t.created_at, t.updated_at, t.deleted_at, t.deleted_reason
+FROM users u JOIN accounts a ON u.ID = a.user_id
+			 JOIN transactions t ON t.account_id = a.id
+WHERE u.name = ? AND a.name = ?
+`
+
+type GetAccountTxnFromNamesParams struct {
+	Name   string
+	Name_2 string
+}
+
+func (q *Queries) GetAccountTxnFromNames(ctx context.Context, arg GetAccountTxnFromNamesParams) ([]Transaction, error) {
+	rows, err := q.db.QueryContext(ctx, getAccountTxnFromNames, arg.Name, arg.Name_2)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Transaction
+	for rows.Next() {
+		var i Transaction
+		if err := rows.Scan(
+			&i.ID,
+			&i.AccountID,
+			&i.IsIncome,
+			&i.Amount,
+			&i.Description,
+			&i.OccurredAt,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.DeletedAt,
+			&i.DeletedReason,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }

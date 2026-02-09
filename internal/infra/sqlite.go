@@ -44,6 +44,23 @@ func (sr SqliteRunner) Run(ctx context.Context, fx core.Effect, emit func(core.E
 
 	case core.FxDeleteAccount:
 		return sr.sqliteDeleteAccount(ctx, v, emit)	
+
+	case core.FxLoadAccounts:
+		return sr.sqliteLoadAccounts(ctx, v, emit)	
+
+
+	// ============================== Account ==============================
+	case core.FxCreateTxn:
+		return sr.sqliteCreateTxn(ctx, v, emit)	
+
+	case core.FxDeleteTxn:
+		return sr.sqliteDeleteTxn(ctx, v, emit)	
+
+	case core.FxLoadAccountTxns:
+		return sr.sqliteLoadAccountTxns(ctx, v, emit)	
+
+	case core.FxImportTxnsFromFile:
+		return sr.sqliteImportTxnsFromFile(ctx, v, emit)	
 	}
 	return false
 }
@@ -197,3 +214,95 @@ func (sr SqliteRunner) sqliteDeleteAccount(ctx context.Context, fx core.FxDelete
 	return true
 }
 
+func (sr SqliteRunner) sqliteLoadAccounts(ctx context.Context, fx core.FxLoadAccounts, emit func(core.Event)) bool {
+	user, err := sr.Q.GetUserByName(ctx, fx.Username)	
+	if err != nil {
+		emit(core.DBFailure{Err: err})
+		return true 
+	}
+
+	accounts, err := sr.Q.GetAllAccounts(ctx, user.ID)
+	if err != nil {
+		emit(core.DBFailure{Err: err})
+		return true
+	}
+
+	values := make([]string, len(accounts))
+	for i := range accounts {
+		values[i] = accounts[i].Name
+	}
+	emit(core.AccountsLoaded{AccountNames: values})
+	return true
+}
+
+func (sr SqliteRunner) sqliteCreateTxn(ctx context.Context, fx core.FxCreateTxn, emit func(core.Event)) bool {	
+	params := database.CreateTransactionFromNamesParams{
+		Name: fx.Username,
+		Name_2: fx.AccountName,
+		Amount: fx.Amount,
+		Description: fx.Description,
+		OccurredAt: fx.Date,
+		IsIncome: fx.Income,
+	}
+
+	txn, err := sr.Q.CreateTransactionFromNames(ctx, params)
+	if err != nil {
+		emit(core.DBFailure{Err: err})
+		return true
+	}
+	
+	emit(core.TxnCreated{
+		Transaction: core.Txn{
+			ID: txn.ID,
+			Username: fx.Username,
+			AccountName: fx.AccountName,
+			Income: txn.IsIncome,
+			Description: txn.Description,
+			Amount: txn.Amount,
+		},
+	})
+	return true 
+}
+
+func (sr SqliteRunner) sqliteDeleteTxn(ctx context.Context, fx core.FxDeleteTxn, emit func(core.Event)) bool {
+	err := sr.Q.DeleteTransaction(ctx, fx.TxnID)
+	if err != nil {
+		emit(core.DBFailure{Err: err})
+		return true
+	}
+	emit(core.TxnDeleted{})
+	return true 
+}
+
+func (sr SqliteRunner) sqliteLoadAccountTxns(ctx context.Context, fx core.FxLoadAccountTxns, emit func(core.Event)) bool {		
+	params := database.GetAccountTxnFromNamesParams{
+		Name: fx.Username,
+		Name_2: fx.AccountName,
+	}
+
+	txns, err := sr.Q.GetAccountTxnFromNames(ctx, params)
+	log.Println("Got", len(txns))
+	if err != nil {
+		emit(core.DBFailure{Err: err})
+		return true
+	}
+
+	values := make([]core.Txn, len(txns))
+	for i := range txns {
+		values[i] = core.Txn{
+			ID: txns[i].ID,
+			Username: fx.Username,
+			AccountName: fx.AccountName,
+			Amount: txns[i].Amount,
+			Description: txns[i].Description,
+			Income: txns[i].IsIncome,
+		}
+	}
+
+	emit(core.AccountTxnsLoaded{Transactions: values})
+	return true 
+}
+
+func (sr SqliteRunner) sqliteImportTxnsFromFile(ctx context.Context, fx core.FxImportTxnsFromFile, emit func(core.Event)) bool {
+	return true
+}

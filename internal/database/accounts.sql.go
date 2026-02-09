@@ -53,11 +53,16 @@ func (q *Queries) DeleteAccount(ctx context.Context, arg DeleteAccountParams) er
 const getAccountByName = `-- name: GetAccountByName :one
 SELECT id, user_id, name, created_at, updated_at, deleted_at, deleted_reason 
 FROM accounts
-WHERE name = ?
+WHERE name = ? and user_id = ?
 `
 
-func (q *Queries) GetAccountByName(ctx context.Context, name string) (Account, error) {
-	row := q.db.QueryRowContext(ctx, getAccountByName, name)
+type GetAccountByNameParams struct {
+	Name   string
+	UserID int64
+}
+
+func (q *Queries) GetAccountByName(ctx context.Context, arg GetAccountByNameParams) (Account, error) {
+	row := q.db.QueryRowContext(ctx, getAccountByName, arg.Name, arg.UserID)
 	var i Account
 	err := row.Scan(
 		&i.ID,
@@ -69,4 +74,41 @@ func (q *Queries) GetAccountByName(ctx context.Context, name string) (Account, e
 		&i.DeletedReason,
 	)
 	return i, err
+}
+
+const getAllAccounts = `-- name: GetAllAccounts :many
+SELECT id, user_id, name, created_at, updated_at, deleted_at, deleted_reason 
+FROM accounts
+WHERE user_id = ?
+`
+
+func (q *Queries) GetAllAccounts(ctx context.Context, userID int64) ([]Account, error) {
+	rows, err := q.db.QueryContext(ctx, getAllAccounts, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Account
+	for rows.Next() {
+		var i Account
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.Name,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.DeletedAt,
+			&i.DeletedReason,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }

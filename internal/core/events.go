@@ -2,9 +2,11 @@ package core
 
 type Event interface{ isEvent() }
 
-
 type DBFailure struct {Err error}
 func (DBFailure) isEvent() {}
+
+type GeneralFailure struct {Err error}
+func (GeneralFailure) isEvent() {}
 
 type UsersLoaded struct {Usernames []string}
 func (UsersLoaded) isEvent() {}
@@ -42,3 +44,29 @@ type AccountDeleted struct {
 	Username 	string
 }
 func (AccountDeleted) isEvent() {}
+
+type AccountsLoaded struct {AccountNames []string}
+func (AccountsLoaded) isEvent() {}
+
+// ============================== Transaction Events ==============================
+type Txn struct {
+	ID 			int64
+	Username 	string
+	AccountName string
+	Amount		float64
+	Description	string
+	Income		bool
+}
+
+type TxnCreated struct {
+	Transaction Txn	
+}
+func (TxnCreated) isEvent() {}
+
+type TxnDeleted struct {}
+func (TxnDeleted) isEvent() {}
+
+type AccountTxnsLoaded struct {
+	Transactions []Txn
+}
+func (AccountTxnsLoaded) isEvent() {}

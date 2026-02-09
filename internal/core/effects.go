@@ -2,7 +2,7 @@ package core
 
 type Effect interface{ isEffect() }
 
-// ============================== User Commands ==============================
+// ============================== User Effects ==============================
 type FxLoadSession struct{}
 func (FxLoadSession) isEffect() {}
 
@@ -21,7 +21,7 @@ func (FxDeleteUser) isEffect() {}
 type FxClearSessionUser struct{}
 func (FxClearSessionUser) isEffect() {}
 
-// ============================== Account Commands ==============================
+// ============================== Account Effects ==============================
 type FxCreateAccount struct{
 	Username 	string
 	AccountName string
@@ -33,3 +33,35 @@ type FxDeleteAccount struct{
 	AccountName string
 }
 func (FxDeleteAccount) isEffect() {}
+
+type FxLoadAccounts struct {Username string}
+func (FxLoadAccounts) isEffect() {}
+
+// ============================== Transaction Effects ==============================
+type FxCreateTxn struct{
+	Username 	string
+	AccountName string
+	Amount		float64
+	Description	string
+	Date		int64
+	Income		bool
+}
+func (FxCreateTxn) isEffect() {}
+
+type FxDeleteTxn struct{TxnID int64}
+func (FxDeleteTxn) isEffect() {}
+
+type FxLoadAccountTxns struct{
+	Username 	string
+	AccountName string
+}
+func (FxLoadAccountTxns) isEffect() {}
+
+type FxImportTxnsFromFile struct{
+	Username 	string
+	AccountName string
+	FilePath	string	
+	FileOrigin	string	
+	FileType	string 	
+}
+func (FxImportTxnsFromFile) isEffect() {}
