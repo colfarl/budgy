@@ -18,6 +18,16 @@ type Account struct {
 	DeletedReason sql.NullString
 }
 
+type Category struct {
+	ID            int64
+	Name          string
+	IsIncome      bool
+	CreatedAt     int64
+	UpdatedAt     int64
+	DeletedAt     sql.NullInt64
+	DeletedReason sql.NullString
+}
+
 type Session struct {
 	ID         int64
 	Username   sql.NullString

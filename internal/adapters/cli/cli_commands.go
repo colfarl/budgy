@@ -24,11 +24,17 @@ type CliCommands struct {
 	} `cmd:"" help:"Account management."`
 
 	Txn struct {
-		Add 		TxnAddCmd			`cmd:"" help:"Add account to user"`
-		Delete 		TxnDeleteCmd 		`cmd:"" help:"Remove account from user"`
-		List 		TxnListCmd  		`cmd:"" help:"list all accounts for user"`
+		Add 		TxnAddCmd			`cmd:"" help:"Add transaction to user account"`
+		Delete 		TxnDeleteCmd 		`cmd:"" help:"Remove transaction from user account"`
+		List 		TxnListCmd  		`cmd:"" help:"list all transactions for a user account"`
 		ImportFile  TxnImportFileCmd	`cmd:"" help:"import transactions from a file."`
 	}  `cmd:"" help:"Transaction management"`
+
+	Category struct {
+		Add 		CategoryAddCMD		`cmd:"" help:"Add account to user"`
+		Delete 		CategoryDeleteCmd 	`cmd:"" help:"Remove account from user"`
+		List 		CategoryListCmd  	`cmd:"" help:"list all accounts for user"`
+	}  `cmd:"" help:"Category Management"`
 }
 
 
