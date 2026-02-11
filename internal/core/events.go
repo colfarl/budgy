@@ -70,3 +70,8 @@ type AccountTxnsLoaded struct {
 	Transactions []Txn
 }
 func (AccountTxnsLoaded) isEvent() {}
+
+type TxnsImported struct {
+	Transactions []Txn
+}
+func (TxnsImported) isEvent() {}

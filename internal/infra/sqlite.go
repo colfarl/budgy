@@ -49,7 +49,7 @@ func (sr SqliteRunner) Run(ctx context.Context, fx core.Effect, emit func(core.E
 		return sr.sqliteLoadAccounts(ctx, v, emit)	
 
 
-	// ============================== Account ==============================
+	// ============================== Transactions ==============================
 	case core.FxCreateTxn:
 		return sr.sqliteCreateTxn(ctx, v, emit)	
 
@@ -237,8 +237,8 @@ func (sr SqliteRunner) sqliteLoadAccounts(ctx context.Context, fx core.FxLoadAcc
 
 func (sr SqliteRunner) sqliteCreateTxn(ctx context.Context, fx core.FxCreateTxn, emit func(core.Event)) bool {	
 	params := database.CreateTransactionFromNamesParams{
-		Name: fx.Username,
-		Name_2: fx.AccountName,
+		Username: fx.Username,
+		AccountName: fx.AccountName,
 		Amount: fx.Amount,
 		Description: fx.Description,
 		OccurredAt: fx.Date,
@@ -276,8 +276,8 @@ func (sr SqliteRunner) sqliteDeleteTxn(ctx context.Context, fx core.FxDeleteTxn,
 
 func (sr SqliteRunner) sqliteLoadAccountTxns(ctx context.Context, fx core.FxLoadAccountTxns, emit func(core.Event)) bool {		
 	params := database.GetAccountTxnFromNamesParams{
-		Name: fx.Username,
-		Name_2: fx.AccountName,
+		Username: fx.Username,
+		AccountName: fx.AccountName,
 	}
 
 	txns, err := sr.Q.GetAccountTxnFromNames(ctx, params)
@@ -304,5 +304,46 @@ func (sr SqliteRunner) sqliteLoadAccountTxns(ctx context.Context, fx core.FxLoad
 }
 
 func (sr SqliteRunner) sqliteImportTxnsFromFile(ctx context.Context, fx core.FxImportTxnsFromFile, emit func(core.Event)) bool {
+	key := FileKey{Bank: fx.FileOrigin, Format: fx.FileType}
+	reader, ok := FileRegistry[key]	
+	if !ok {
+		emit(core.GeneralFailure{Err: ErrUnsupportedFile})
+		return true
+	}
+	
+	txns, err := reader(fx.FilePath)
+	if err != nil {
+		emit(core.GeneralFailure{Err: err})
+		return true
+	}
+	
+	uploaded := make([]core.Txn, 0)
+	for _, v := range txns {
+		params := database.CreateTransactionFromNamesParams{
+			Username: fx.Username,
+			AccountName: fx.AccountName,
+			IsIncome: v.Income,
+			Amount: v.Amount,
+			Description: v.Description,
+			OccurredAt: v.Date,
+		}
+
+		inserted, err := sr.Q.CreateTransactionFromNames(ctx, params)
+		if err != nil {
+			// fail silently
+			log.Printf("skipping: %v\n", err)
+			continue
+		}
+
+		uploaded = append(uploaded, core.Txn{
+			ID: inserted.ID,
+			Username: fx.Username,
+			AccountName: fx.AccountName,
+			Amount: inserted.Amount, 
+			Income: inserted.IsIncome, 
+		})
+	}
+
+	emit(core.TxnsImported{Transactions: uploaded})
 	return true
 }

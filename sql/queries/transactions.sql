@@ -19,15 +19,15 @@ INSERT INTO transactions (
 	SElECT a.id 
 	FROM accounts a 
 		JOIN users u on a.user_id = u.ID
-	WHERE u.name = ? AND a.name = ?
-	), ?, ?, ?, ?) 
+	WHERE u.name = @username AND a.name = @account_name
+	), @is_income, @amount, @description, @occurred_at) 
 RETURNING *;
 
 -- name: GetAccountTxnFromNames :many
 SELECT t.*
 FROM users u JOIN accounts a ON u.ID = a.user_id
 			 JOIN transactions t ON t.account_id = a.id
-WHERE u.name = ? AND a.name = ?;
+WHERE u.name = sqlc.arg(username) AND a.name = sqlc.arg(account_name);
 
 -- name: DeleteTransaction :exec
 DELETE FROM transactions

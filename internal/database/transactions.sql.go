@@ -63,14 +63,14 @@ INSERT INTO transactions (
 	SElECT a.id 
 	FROM accounts a 
 		JOIN users u on a.user_id = u.ID
-	WHERE u.name = ? AND a.name = ?
-	), ?, ?, ?, ?) 
+	WHERE u.name = ?1 AND a.name = ?2
+	), ?3, ?4, ?5, ?6) 
 RETURNING id, account_id, is_income, amount, description, occurred_at, created_at, updated_at, deleted_at, deleted_reason
 `
 
 type CreateTransactionFromNamesParams struct {
-	Name        string
-	Name_2      string
+	Username    string
+	AccountName string
 	IsIncome    bool
 	Amount      float64
 	Description string
@@ -79,8 +79,8 @@ type CreateTransactionFromNamesParams struct {
 
 func (q *Queries) CreateTransactionFromNames(ctx context.Context, arg CreateTransactionFromNamesParams) (Transaction, error) {
 	row := q.db.QueryRowContext(ctx, createTransactionFromNames,
-		arg.Name,
-		arg.Name_2,
+		arg.Username,
+		arg.AccountName,
 		arg.IsIncome,
 		arg.Amount,
 		arg.Description,
@@ -116,16 +116,16 @@ const getAccountTxnFromNames = `-- name: GetAccountTxnFromNames :many
 SELECT t.id, t.account_id, t.is_income, t.amount, t.description, t.occurred_at, t.created_at, t.updated_at, t.deleted_at, t.deleted_reason
 FROM users u JOIN accounts a ON u.ID = a.user_id
 			 JOIN transactions t ON t.account_id = a.id
-WHERE u.name = ? AND a.name = ?
+WHERE u.name = ?1 AND a.name = ?2
 `
 
 type GetAccountTxnFromNamesParams struct {
-	Name   string
-	Name_2 string
+	Username    string
+	AccountName string
 }
 
 func (q *Queries) GetAccountTxnFromNames(ctx context.Context, arg GetAccountTxnFromNamesParams) ([]Transaction, error) {
-	rows, err := q.db.QueryContext(ctx, getAccountTxnFromNames, arg.Name, arg.Name_2)
+	rows, err := q.db.QueryContext(ctx, getAccountTxnFromNames, arg.Username, arg.AccountName)
 	if err != nil {
 		return nil, err
 	}

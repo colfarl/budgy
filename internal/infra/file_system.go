@@ -1,32 +1,36 @@
 package infra
 
 import (
-
-	"os"
 	"errors"
-	"time"
+	//"log"
+	"os"
 	"strconv"
+	"strings"
+	"time"
+
 	//"context"
 	"encoding/csv"
-
 	//"github.com/colfarl/budgy/internal/database"
 	//"github.com/colfarl/budgy/internal/core"
 )
 
-type FileProcessor func(string) ([]ParsedTxn, error)
 
-var FileRegistry = map[string]map[string]FileProcessor{
-	"boa": {
-		"csv": import_boa_csv,  
-	},
+type FileKey struct {
+	Bank 	string	
+	Format	string 	
 }
 
-func placeHolder (s string) error {return nil}
+type FileProcessor func(string) ([]ParsedTxn, error)
+
+var FileRegistry = map[FileKey]FileProcessor{
+	{Bank: "boa", Format: "csv"}: ImportBoaCsv,
+}
 
 var ErrWrongNumCols = errors.New("INVALID TRANSACTION ROW: Wrong number of columns")
 var ErrInvalidDate = errors.New("INVALID TRANSACTION ROW: Could not parse date")
 var ErrInvalidAmount = errors.New("INVALID TRANSACTION ROW: Could not parse amount")
 var ErrNoHeaderRow = errors.New("INVALID TRANSACTION CSV: No header file found")
+var ErrUnsupportedFile = errors.New("INVALID FILE: no support for bank and file type")
 
 type ParsedTxn struct {
 	Amount		float64
@@ -35,7 +39,7 @@ type ParsedTxn struct {
 	Income		bool
 }
 
-func import_boa_csv(filename string) ([]ParsedTxn, error) {
+func ImportBoaCsv(filename string) ([]ParsedTxn, error) {
 	rows, err := ReadCsvFile(filename)
 	if err != nil {
 		return nil, err
@@ -70,6 +74,7 @@ func parseBoaRow(row []string) (ParsedTxn, error) {
 	var parsed_amount float64
 	var err error
 
+	row[2] = strings.ReplaceAll(row[2], ",", "")
 	if len(row) != 4 {
 		return ParsedTxn{}, ErrWrongNumCols
 	} else if parsed_time, err = time.Parse("01/02/2006", row[0]); err != nil {
@@ -127,5 +132,3 @@ func ReadCsvFile(filename string) ([][]string, error) {
 
 	return records, nil
 }
-
-

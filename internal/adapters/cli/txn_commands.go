@@ -73,7 +73,7 @@ func (t *TxnDeleteCmd) Run(binds *Context) error {
 			} else if binds.Store.State.Error != nil {
 				return binds.Store.State.Error
 			} else {
-				fmt.Errorf("Unknown error while deleting transaction\n")
+				return fmt.Errorf("Unknown error while deleting transaction\n")
 			}
 		}
 	}
@@ -105,7 +105,43 @@ func (t *TxnListCmd) Run(binds *Context) error {
 			} else if binds.Store.State.Error != nil {
 				return binds.Store.State.Error
 			} else {
-				return fmt.Errorf("Unknown error while deleting transaction\n")
+				return fmt.Errorf("Unknown error while loading transactions\n")
+			}
+
+		}
+	}
+}
+
+func (t *TxnImportFileCmd) Run(binds *Context) error {	
+	binds.Store.Commands <- core.ImportTxnsFromFile{
+		Username: t.Username,
+		AccountName: t.AccountName,
+		FileName: t.FilePath,	
+		FileType: t.FileType,
+		FileOrigin: t.FileOrigin,
+	}
+
+	for {
+		select {
+		case <- binds.Ctx.Done():
+			return fmt.Errorf("TIMEOUT OCCURRED: %v\n", binds.Store.State.Error)
+		case event := <- binds.Store.Events: 
+			if v, ok := event.(core.TxnsImported); ok {
+				if len(v.Transactions) == 0 {
+					fmt.Printf("did not import any transactions...")
+					return nil
+				}
+				
+				fmt.Printf("Transactions uploaded for %s in %s account:\n", v.Transactions[0].Username, v.Transactions[0].AccountName)
+				for i, u := range v.Transactions {
+					fmt.Printf("	%d. ID: %d, Amount: %.2f, Income: %t\n",
+											i + 1, u.ID, u.Amount, u.Income)
+				}
+				return nil
+			} else if binds.Store.State.Error != nil {
+				return binds.Store.State.Error
+			} else {
+				return fmt.Errorf("Unknown error while importing transactions\n")
 			}
 
 		}
