@@ -54,6 +54,21 @@ func Evaluate (s State, c Command) ([]Event, []Effect) {
 
 	case ImportTxnsFromFile:
 		return evalImportTxnsFromFile(s, cmd)
+
+	//Category Level 
+	case CreateCategory:
+		params := Category{
+			Name: cmd.Name,
+			IsIncome: cmd.IsIncome,
+		}
+		return nil, []Effect{FxCreateCategory{Category: params}}
+
+	case DeleteCategory:
+		return nil, []Effect{FxDeleteCategory{ID: cmd.ID}}
+
+	case LoadAllCategories:
+		return nil, []Effect{FxLoadCategories{}}
+
 	}
 	
 	return nil, nil

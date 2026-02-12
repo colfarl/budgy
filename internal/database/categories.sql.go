@@ -36,7 +36,7 @@ func (q *Queries) CreateCategory(ctx context.Context, arg CreateCategoryParams) 
 }
 
 const deleteCategory = `-- name: DeleteCategory :exec
-DELETE FROM accounts
+DELETE FROM categories 
 WHERE id = ?
 `
 

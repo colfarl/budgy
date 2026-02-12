@@ -13,6 +13,6 @@ FROM categories
 WHERE is_income = ?;
 
 -- name: DeleteCategory :exec
-DELETE FROM accounts
+DELETE FROM categories 
 WHERE id = ?;
 

@@ -31,9 +31,9 @@ type CliCommands struct {
 	}  `cmd:"" help:"Transaction management"`
 
 	Category struct {
-		Add 		CategoryAddCMD		`cmd:"" help:"Add account to user"`
-		Delete 		CategoryDeleteCmd 	`cmd:"" help:"Remove account from user"`
-		List 		CategoryListCmd  	`cmd:"" help:"list all accounts for user"`
+		Add 		CategoryAddCmd		`cmd:"" help:"Add Category to budgy"`
+		Delete 		CategoryDeleteCmd 	`cmd:"" help:"Remove Category from Budgy"`
+		List 		CategoryListCmd  	`cmd:"" help:"list all categories"`
 	}  `cmd:"" help:"Category Management"`
 }
 

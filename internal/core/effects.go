@@ -65,3 +65,13 @@ type FxImportTxnsFromFile struct{
 	FileType	string 	
 }
 func (FxImportTxnsFromFile) isEffect() {}
+
+// ============================== Category Effects ==============================
+type FxCreateCategory struct{Category Category}
+func (FxCreateCategory) isEffect() {}
+
+type FxDeleteCategory struct{ID int64}
+func (FxDeleteCategory) isEffect() {}
+
+type FxLoadCategories struct{}
+func (FxLoadCategories) isEffect() {}

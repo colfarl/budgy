@@ -61,6 +61,16 @@ func (sr SqliteRunner) Run(ctx context.Context, fx core.Effect, emit func(core.E
 
 	case core.FxImportTxnsFromFile:
 		return sr.sqliteImportTxnsFromFile(ctx, v, emit)	
+
+	// ============================== Transactions ==============================
+	case core.FxCreateCategory:
+		return sr.sqliteCreateCategory(ctx, v, emit)
+
+	case core.FxDeleteCategory:
+		return sr.sqliteDeleteCategory(ctx, v, emit)
+
+	case core.FxLoadCategories:
+		return sr.sqliteLoadCategories(ctx, emit)
 	}
 	return false
 }
@@ -345,5 +355,56 @@ func (sr SqliteRunner) sqliteImportTxnsFromFile(ctx context.Context, fx core.FxI
 	}
 
 	emit(core.TxnsImported{Transactions: uploaded})
+	return true
+}
+
+func (sr SqliteRunner) sqliteCreateCategory(ctx context.Context, fx core.FxCreateCategory, emit func(core.Event)) bool {
+	params := database.CreateCategoryParams{
+		Name: fx.Category.Name,
+		IsIncome: fx.Category.IsIncome,
+	}
+
+	cat, err := sr.Q.CreateCategory(ctx, params)
+	if err != nil {
+		emit(core.GeneralFailure{Err: err})
+		return true
+	}
+	
+	emit(core.CategoryCreated{Category: core.Category{
+		ID: cat.ID,
+		Name: cat.Name, 
+		IsIncome: cat.IsIncome,
+	}})
+	return true
+}
+
+func (sr SqliteRunner) sqliteDeleteCategory(ctx context.Context, fx core.FxDeleteCategory, emit func(core.Event)) bool {
+	err := sr.Q.DeleteCategory(ctx, fx.ID)
+	if err != nil {
+		emit(core.DBFailure{Err: err})
+		return true
+	}
+
+	emit(core.CategoryDeleted{ID: fx.ID})
+	return true
+}
+
+func (sr SqliteRunner) sqliteLoadCategories(ctx context.Context, emit func(core.Event)) bool {
+	cats, err := sr.Q.GetAllCategories(ctx) 
+	if err != nil {
+		emit(core.DBFailure{Err: err})
+		return true
+	}
+	
+	values := make([]core.Category, len(cats))
+	for i := range cats {
+		values[i] = core.Category{
+			ID: cats[i].ID,
+			Name: cats[i].Name,
+			IsIncome: cats[i].IsIncome,
+		}
+	}
+
+	emit(core.CategoriesLoaded{Categories: values})
 	return true
 }

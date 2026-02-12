@@ -75,3 +75,19 @@ type TxnsImported struct {
 	Transactions []Txn
 }
 func (TxnsImported) isEvent() {}
+
+// ============================== Category Events ==============================
+type Category struct {
+	ID int64
+	Name string
+	IsIncome bool
+}
+
+type CategoryCreated struct{Category Category}
+func (CategoryCreated) isEvent() {}
+
+type CategoryDeleted struct{ID int64}
+func (CategoryDeleted) isEvent() {}
+
+type CategoriesLoaded struct{Categories []Category}
+func (CategoriesLoaded) isEvent() {}

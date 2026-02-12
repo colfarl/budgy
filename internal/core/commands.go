@@ -56,3 +56,16 @@ type ImportTxnsFromFile struct {
 	FileOrigin	string // Bank or place where it came from 
 }
 func (ImportTxnsFromFile) isCommand() {}
+
+// ============================== Category Commands ===============================
+type CreateCategory struct{
+	Name string
+	IsIncome bool
+}
+func (CreateCategory) isCommand() {}
+
+type DeleteCategory struct{ID int64}
+func (DeleteCategory) isCommand() {}
+
+type LoadAllCategories struct{}
+func (LoadAllCategories) isCommand() {}
