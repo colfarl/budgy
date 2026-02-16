@@ -76,6 +76,21 @@ type TxnsImported struct {
 }
 func (TxnsImported) isEvent() {}
 
+type TxnUncategorized struct {ID int64}
+func (TxnUncategorized) isEvent() {}
+
+type TxnCategorized struct {
+	ID			int64
+	Category 	string
+}
+func (TxnCategorized) isEvent() {}
+
+type TxnSplit struct {
+	Old	Txn	
+	New [][]string	 // amount, category where category might be ""
+}
+func (TxnSplit) isEvent() {}
+
 // ============================== Category Events ==============================
 type Category struct {
 	ID int64

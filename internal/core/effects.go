@@ -52,10 +52,26 @@ type FxDeleteTxn struct{TxnID int64}
 func (FxDeleteTxn) isEffect() {}
 
 type FxLoadAccountTxns struct{
-	Username 	string
-	AccountName string
+	Username 		string
+	AccountName 	string
+	Uncategorized 	bool
 }
 func (FxLoadAccountTxns) isEffect() {}
+
+type FxCategorizeTxn struct{
+	ID 			int64	
+	Category 	string
+}
+func (FxCategorizeTxn) isEffect() {}
+
+type FxUncategorizeTxn struct{ID int64}
+func (FxUncategorizeTxn) isEffect() {}
+
+type FxSplitTransaction struct{
+	ID 		int64
+	Splits 	[]string
+}
+func (FxSplitTransaction) isEffect() {}
 
 type FxImportTxnsFromFile struct{
 	Username 	string

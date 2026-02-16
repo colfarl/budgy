@@ -50,7 +50,16 @@ func Evaluate (s State, c Command) ([]Event, []Effect) {
 		return nil, []Effect{FxDeleteTxn{TxnID: cmd.ID}}
 
 	case LoadAccountTxns:
-		return nil, []Effect{FxLoadAccountTxns{Username: cmd.Username, AccountName: cmd.AccountName}}
+		return nil, []Effect{FxLoadAccountTxns{Username: cmd.Username, AccountName: cmd.AccountName, Uncategorized: cmd.Uncategorized}}
+	
+	case CategorizeTxn:
+		return nil, []Effect{FxCategorizeTxn{ID: cmd.ID, Category: cmd.Category}}
+
+	case UncategorizeTxn:
+		return nil, []Effect{FxUncategorizeTxn{ID: cmd.ID}}
+
+	case SplitTxn:
+		return nil, []Effect{FxSplitTransaction{ID: cmd.ID, Splits: cmd.Splits}}
 
 	case ImportTxnsFromFile:
 		return evalImportTxnsFromFile(s, cmd)

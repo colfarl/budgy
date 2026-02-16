@@ -9,6 +9,37 @@ import (
 	"context"
 )
 
+const categorizeTransactionByName = `-- name: CategorizeTransactionByName :exec
+INSERT INTO category_transaction (
+	transaction_id, 
+	category_id
+) VALUES (
+	?, (SELECT id FROM categories WHERE name = ?)
+)
+`
+
+type CategorizeTransactionByNameParams struct {
+	TransactionID int64
+	Name          string
+}
+
+func (q *Queries) CategorizeTransactionByName(ctx context.Context, arg CategorizeTransactionByNameParams) error {
+	_, err := q.db.ExecContext(ctx, categorizeTransactionByName, arg.TransactionID, arg.Name)
+	return err
+}
+
+const checkIfTransactionCategorized = `-- name: CheckIfTransactionCategorized :one
+SELECT t.id
+FROM transactions t 
+WHERE t.id = ? AND t.id in (SELECT transaction_id FROM category_transaction)
+`
+
+func (q *Queries) CheckIfTransactionCategorized(ctx context.Context, id int64) (int64, error) {
+	row := q.db.QueryRowContext(ctx, checkIfTransactionCategorized, id)
+	err := row.Scan(&id)
+	return id, err
+}
+
 const createTransaction = `-- name: CreateTransaction :one
 INSERT INTO transactions (
 	account_id,
@@ -156,4 +187,85 @@ func (q *Queries) GetAccountTxnFromNames(ctx context.Context, arg GetAccountTxnF
 		return nil, err
 	}
 	return items, nil
+}
+
+const getAccountUncategorizedTxnFromNames = `-- name: GetAccountUncategorizedTxnFromNames :many
+SELECT t.id, t.account_id, t.is_income, t.amount, t.description, t.occurred_at, t.created_at, t.updated_at, t.deleted_at, t.deleted_reason
+FROM users u JOIN accounts a ON u.ID = a.user_id
+			 JOIN transactions t ON t.account_id = a.id
+WHERE u.name = ?1 AND a.name = ?2
+	AND t.id NOT IN (SELECT transaction_id FROM category_transaction)
+`
+
+type GetAccountUncategorizedTxnFromNamesParams struct {
+	Username    string
+	AccountName string
+}
+
+func (q *Queries) GetAccountUncategorizedTxnFromNames(ctx context.Context, arg GetAccountUncategorizedTxnFromNamesParams) ([]Transaction, error) {
+	rows, err := q.db.QueryContext(ctx, getAccountUncategorizedTxnFromNames, arg.Username, arg.AccountName)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Transaction
+	for rows.Next() {
+		var i Transaction
+		if err := rows.Scan(
+			&i.ID,
+			&i.AccountID,
+			&i.IsIncome,
+			&i.Amount,
+			&i.Description,
+			&i.OccurredAt,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.DeletedAt,
+			&i.DeletedReason,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getTxnFromID = `-- name: GetTxnFromID :one
+SELECT id, account_id, is_income, amount, description, occurred_at, created_at, updated_at, deleted_at, deleted_reason
+FROM transactions
+where id = ?
+`
+
+func (q *Queries) GetTxnFromID(ctx context.Context, id int64) (Transaction, error) {
+	row := q.db.QueryRowContext(ctx, getTxnFromID, id)
+	var i Transaction
+	err := row.Scan(
+		&i.ID,
+		&i.AccountID,
+		&i.IsIncome,
+		&i.Amount,
+		&i.Description,
+		&i.OccurredAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+		&i.DeletedReason,
+	)
+	return i, err
+}
+
+const uncategorizeTransaction = `-- name: UncategorizeTransaction :exec
+DELETE FROM category_transaction
+WHERE transaction_id = ?
+`
+
+func (q *Queries) UncategorizeTransaction(ctx context.Context, transactionID int64) error {
+	_, err := q.db.ExecContext(ctx, uncategorizeTransaction, transactionID)
+	return err
 }

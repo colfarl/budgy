@@ -45,8 +45,21 @@ type DeleteTxn struct{ID int64}
 func (DeleteTxn) isCommand() {}
 
 //needs to have date filters
-type LoadAccountTxns struct{Username string; AccountName string}
+type LoadAccountTxns struct{
+	Username string
+	AccountName string
+	Uncategorized bool
+}
 func (LoadAccountTxns) isCommand() {}
+
+type CategorizeTxn struct{ID int64; Category string}
+func (CategorizeTxn) isCommand() {}
+
+type UncategorizeTxn struct{ID int64}
+func (UncategorizeTxn) isCommand() {}
+
+type SplitTxn struct{ID int64; Splits []string}
+func (SplitTxn) isCommand() {}
 
 type ImportTxnsFromFile struct {
 	Username 	string

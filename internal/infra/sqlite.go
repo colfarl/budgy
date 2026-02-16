@@ -1,10 +1,13 @@
 package infra
 
 import (
+	"fmt"
 	"context"
 	"database/sql"
 	"errors"
 	"log"
+	"strconv"
+	"strings"
 
 	"github.com/colfarl/budgy/internal/core"
 	"github.com/colfarl/budgy/internal/database"
@@ -62,7 +65,16 @@ func (sr SqliteRunner) Run(ctx context.Context, fx core.Effect, emit func(core.E
 	case core.FxImportTxnsFromFile:
 		return sr.sqliteImportTxnsFromFile(ctx, v, emit)	
 
-	// ============================== Transactions ==============================
+	case core.FxCategorizeTxn:
+		return sr.sqliteCategorizeTxn(ctx, v, emit)	
+
+	case core.FxUncategorizeTxn:
+		return sr.sqliteUncategorizeTxn(ctx, v, emit)	
+
+	case core.FxSplitTransaction:
+		return sr.sqliteSplitTxn(ctx, v, emit)	
+
+	// ============================== Categories ==============================
 	case core.FxCreateCategory:
 		return sr.sqliteCreateCategory(ctx, v, emit)
 
@@ -285,16 +297,33 @@ func (sr SqliteRunner) sqliteDeleteTxn(ctx context.Context, fx core.FxDeleteTxn,
 }
 
 func (sr SqliteRunner) sqliteLoadAccountTxns(ctx context.Context, fx core.FxLoadAccountTxns, emit func(core.Event)) bool {		
-	params := database.GetAccountTxnFromNamesParams{
-		Username: fx.Username,
-		AccountName: fx.AccountName,
-	}
+		
+	var txns []database.Transaction
+	var err error 
 
-	txns, err := sr.Q.GetAccountTxnFromNames(ctx, params)
-	log.Println("Got", len(txns))
-	if err != nil {
-		emit(core.DBFailure{Err: err})
-		return true
+	if fx.Uncategorized {
+		log.Println("in uncategorized")
+		params := database.GetAccountUncategorizedTxnFromNamesParams{
+			Username: fx.Username,
+			AccountName: fx.AccountName,
+		}
+		txns, err = sr.Q.GetAccountUncategorizedTxnFromNames(ctx, params)
+		log.Println("Got", len(txns))
+		if err != nil {
+			emit(core.DBFailure{Err: err})
+			return true
+		}
+	} else {
+		params := database.GetAccountTxnFromNamesParams{
+			Username: fx.Username,
+			AccountName: fx.AccountName,
+		}
+		txns, err = sr.Q.GetAccountTxnFromNames(ctx, params)
+		log.Println("Got", len(txns))
+		if err != nil {
+			emit(core.DBFailure{Err: err})
+			return true
+		}
 	}
 
 	values := make([]core.Txn, len(txns))
@@ -406,5 +435,135 @@ func (sr SqliteRunner) sqliteLoadCategories(ctx context.Context, emit func(core.
 	}
 
 	emit(core.CategoriesLoaded{Categories: values})
+	return true
+}
+
+func (sr SqliteRunner) sqliteUncategorizeTxn(ctx context.Context, fx core.FxUncategorizeTxn, emit func(core.Event)) bool {	
+	err := sr.Q.UncategorizeTransaction(ctx, fx.ID)
+	if err != nil {
+		emit(core.DBFailure{Err: err})
+		return true
+	}
+
+	emit(core.TxnUncategorized{ID: fx.ID})
+	return true
+}
+
+func (sr SqliteRunner) sqliteCategorizeTxn(ctx context.Context, fx core.FxCategorizeTxn, emit func(core.Event)) bool {	
+	params := database.CategorizeTransactionByNameParams{
+		TransactionID: fx.ID,
+		Name: fx.Category,
+	}
+
+	err := sr.Q.CategorizeTransactionByName(ctx, params)
+	if err != nil {
+		emit(core.DBFailure{Err: err})
+		return true
+	}
+
+	emit(core.TxnCategorized{ID: fx.ID, Category: fx.Category})
+	return true
+}
+
+func (sr SqliteRunner) sqliteSplitTxn(ctx context.Context, fx core.FxSplitTransaction, emit func(core.Event)) bool {	
+
+	original, err := sr.Q.GetTxnFromID(ctx, fx.ID)
+	if err != nil {
+		emit(core.DBFailure{Err: err})
+		return true
+	}
+	
+	category_lookup := make(map[string]struct{})
+	categories, err := sr.Q.GetAllCategories(ctx)
+	if err != nil {
+		emit(core.DBFailure{Err: err})
+		return true
+	}
+	
+	for _, c := range categories {
+		category_lookup[c.Name] = struct{}{}
+	}
+	
+	tx, err := sr.DB.Begin()
+	defer tx.Rollback()
+
+	total := 0.0
+
+	params := database.CreateTransactionParams{
+		AccountID: original.AccountID,
+		IsIncome: original.IsIncome,
+		Amount: original.Amount,
+		Description: original.Description,	
+		OccurredAt: original.OccurredAt,
+	}
+	
+	result := make([][]string, 0)
+	for _, s := range fx.Splits {
+		new_cat := ""
+		amount := s 		
+
+		if i := strings.IndexByte(s, ':'); i >= 0 {
+			amount = s[:i]
+			new_cat = s[i + 1:] 
+		}
+
+		amount_money, err := strconv.ParseFloat(amount, 64)	
+		if err != nil {	
+			emit(core.GeneralFailure{Err: err})
+			return true
+		}
+		total += amount_money 
+		params.Amount = amount_money
+
+		txn, err := sr.Q.CreateTransaction(ctx, params)
+		if err != nil {	
+			emit(core.DBFailure{Err: err})
+			return true
+		}
+		
+		new_cat = strings.ToLower(new_cat)
+		if new_cat != "" {
+			if _, ok := category_lookup[new_cat]; !ok {
+				emit(core.GeneralFailure{
+					Err: fmt.Errorf("Category %v does not exist", new_cat),
+				})
+				return true
+			}
+
+			categorize_params := database.CategorizeTransactionByNameParams{
+				TransactionID: txn.ID,
+				Name: new_cat,
+			}
+
+			err = sr.Q.CategorizeTransactionByName(ctx, categorize_params)
+			if err != nil {	
+				emit(core.DBFailure{Err: err})
+				return true
+			}
+		}
+		result = append(result, []string{amount, new_cat})
+	}
+
+	if total != original.Amount {
+		emit(core.GeneralFailure{
+			Err: fmt.Errorf("New amount != original amount"),
+		})
+		return true
+	}
+	
+	err = sr.Q.DeleteTransaction(ctx, original.ID)
+	if err != nil {
+		emit(core.DBFailure{Err: err})
+		return true
+	}
+	
+	core_original := core.Txn{
+		ID: original.ID,
+		Amount: original.Amount,
+		Description: original.Description,
+		Income: original.IsIncome,  
+	}
+	emit(core.TxnSplit{Old: core_original, New: result})
+	tx.Commit()
 	return true
 }

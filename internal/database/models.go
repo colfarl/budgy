@@ -28,6 +28,11 @@ type Category struct {
 	DeletedReason sql.NullString
 }
 
+type CategoryTransaction struct {
+	TransactionID int64
+	CategoryID    int64
+}
+
 type Session struct {
 	ID         int64
 	Username   sql.NullString
