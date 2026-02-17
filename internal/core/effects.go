@@ -37,7 +37,6 @@ type FxGetAccountBalance struct{
 }
 func (FxGetAccountBalance) isEffect() {}
 
-
 type FxDeleteAccount struct{
 	Username 	string
 	AccountName string
