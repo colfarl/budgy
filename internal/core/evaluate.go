@@ -28,6 +28,9 @@ func Evaluate (s State, c Command) ([]Event, []Effect) {
 		log.Printf("Called Load Users")
 		return nil, []Effect{FxLoadAllUsers{}}
 	
+	case GetUserBalances:
+		return nil, []Effect{FxGetUserBalances{cmd.Username}}		
+
 	case DeleteUser:
 		log.Printf("Evaluated DeleteUser")
 		return nil, []Effect{FxDeleteUser{Username: &cmd.Username}}
@@ -35,6 +38,9 @@ func Evaluate (s State, c Command) ([]Event, []Effect) {
 	//Account Level 
 	case CreateAccount:
 		return evalCreateAccount(s, cmd.Username, cmd.AccountName)		
+
+	case GetAccountBalance:
+		return nil, []Effect{FxGetAccountBalance{cmd.Username, cmd.AccountName}}		
 
 	case DeleteAccount:
 		return evalDeleteAccount(s, cmd.Username, cmd.AccountName)

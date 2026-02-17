@@ -7,6 +7,7 @@ package database
 
 import (
 	"context"
+	"database/sql"
 )
 
 const categorizeTransactionByName = `-- name: CategorizeTransactionByName :exec
@@ -258,6 +259,74 @@ func (q *Queries) GetTxnFromID(ctx context.Context, id int64) (Transaction, erro
 		&i.DeletedReason,
 	)
 	return i, err
+}
+
+const sumAccountFromUsername = `-- name: SumAccountFromUsername :many
+SELECT
+	a.name,
+	SUM(
+		CASE
+			WHEN is_income = 1 THEN amount
+			ELSE -amount
+		END
+	) as balance
+FROM users u JOIN accounts a ON u.ID = a.user_id
+			 JOIN transactions t ON t.account_id = a.id
+WHERE u.name = ?1 
+GROUP BY a.name
+`
+
+type SumAccountFromUsernameRow struct {
+	Name    string
+	Balance sql.NullFloat64
+}
+
+func (q *Queries) SumAccountFromUsername(ctx context.Context, username string) ([]SumAccountFromUsernameRow, error) {
+	rows, err := q.db.QueryContext(ctx, sumAccountFromUsername, username)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []SumAccountFromUsernameRow
+	for rows.Next() {
+		var i SumAccountFromUsernameRow
+		if err := rows.Scan(&i.Name, &i.Balance); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const sumAccountTxnFromNames = `-- name: SumAccountTxnFromNames :one
+SELECT
+	SUM(
+		CASE
+			WHEN is_income = 1 THEN amount
+			ELSE -amount
+		END
+	) as balance
+FROM users u JOIN accounts a ON u.ID = a.user_id
+			 JOIN transactions t ON t.account_id = a.id
+WHERE u.name = ?1 AND a.name = ?2
+`
+
+type SumAccountTxnFromNamesParams struct {
+	Username    string
+	AccountName string
+}
+
+func (q *Queries) SumAccountTxnFromNames(ctx context.Context, arg SumAccountTxnFromNamesParams) (sql.NullFloat64, error) {
+	row := q.db.QueryRowContext(ctx, sumAccountTxnFromNames, arg.Username, arg.AccountName)
+	var balance sql.NullFloat64
+	err := row.Scan(&balance)
+	return balance, err
 }
 
 const uncategorizeTransaction = `-- name: UncategorizeTransaction :exec

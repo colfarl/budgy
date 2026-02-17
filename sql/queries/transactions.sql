@@ -61,3 +61,30 @@ INSERT INTO category_transaction (
 ) VALUES (
 	?, (SELECT id FROM categories WHERE name = ?)
 );
+
+-- name: SumAccountTxnFromNames :one
+SELECT
+	SUM(
+		CASE
+			WHEN is_income = 1 THEN amount
+			ELSE -amount
+		END
+	) as balance
+FROM users u JOIN accounts a ON u.ID = a.user_id
+			 JOIN transactions t ON t.account_id = a.id
+WHERE u.name = sqlc.arg(username) AND a.name = sqlc.arg(account_name);
+
+-- name: SumAccountFromUsername :many
+SELECT
+	a.name,
+	SUM(
+		CASE
+			WHEN is_income = 1 THEN amount
+			ELSE -amount
+		END
+	) as balance
+FROM users u JOIN accounts a ON u.ID = a.user_id
+			 JOIN transactions t ON t.account_id = a.id
+WHERE u.name = sqlc.arg(username) 
+GROUP BY a.name;
+

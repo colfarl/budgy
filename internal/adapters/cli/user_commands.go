@@ -10,6 +10,32 @@ type UserAddCmd struct {
 	Name string `arg:"" help:"Username."`
 }
 
+type UserBalancesCmd struct {
+	Name string `arg:"" help:"Username."`
+}
+
+func (c *UserBalancesCmd) Run(binds *Context) error {
+	binds.Store.Commands <- core.GetUserBalances{Username: c.Name}	
+	for {
+		select {
+		case <-binds.Ctx.Done():
+			return fmt.Errorf("TIMEOUT OCCURRED: %v\n", binds.Store.State.Error)
+
+		case event := <-binds.Store.Events:
+			if v, ok := event.(core.UserSummed); ok {
+				for _, u := range v.Accounts {
+					fmt.Printf("%s: %.2f\n", u.Name, u.Balance)
+				}
+				return nil
+			}
+			if binds.Store.State.Error != nil {
+				return binds.Store.State.Error
+			}
+			return fmt.Errorf("Unknown error while creating user\n")		
+		}
+	}
+}
+
 func (c *UserAddCmd) Run(binds *Context) error {
 	binds.Store.Commands <- core.CreateUser{Username: c.Name}	
 	for {

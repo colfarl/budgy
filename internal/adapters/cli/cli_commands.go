@@ -12,15 +12,17 @@ type Context struct {
 
 type CliCommands struct {
 	User struct {
-		Add    UserAddCmd    	`cmd:"" help:"Add a user."`
-		List   UserListCmd   	`cmd:"" help:"List users."`
-		Delete UserDeleteCmd	`cmd:"" help:"Delete a user."`
+		Add    		UserAddCmd    	`cmd:"" help:"Add a user."`
+		List 		UserListCmd   	`cmd:"" help:"List users."`
+		Delete 		UserDeleteCmd	`cmd:"" help:"Delete a user."`
+		Balances	UserBalancesCmd `cmd:"" help:"list balances for all accounts."`
 	}	`cmd:"" help:"User management."`
 
 	Account struct {
 		Add AccountAddCmd 			`cmd:"" help:"Add account to user"`
 		Delete AccountDeleteCmd 	`cmd:"" help:"Remove account from user"`
 		List AccountListCmd  		`cmd:"" help:"list all accounts for user"`
+		Balance AccountBalanceCmd	`cmd:"" help:"list balances for one accounts."`
 	} `cmd:"" help:"Account management."`
 
 	Txn struct {

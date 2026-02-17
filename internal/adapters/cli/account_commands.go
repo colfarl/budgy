@@ -12,6 +12,11 @@ type AccountAddCmd struct {
 	AccountName string `arg:"" help:"Account Name."`
 }
 
+type AccountBalanceCmd struct {
+	Username string `arg:"" help:"User who owns Account."`
+	AccountName string `arg:"" help:"Account Name."`
+}
+
 type AccountDeleteCmd struct {
 	Username string `arg:"" help:"User who owns Account."`
 	AccountName string `arg:"" help:"Account Name."`
@@ -83,6 +88,33 @@ func (a *AccountListCmd) Run(binds *Context) error {
 				return nil
 			}
 
+			if binds.Store.State.Error != nil {
+				return binds.Store.State.Error
+			}
+			return fmt.Errorf("Unknown error while creating account")
+		}
+	}
+}
+
+func (a *AccountBalanceCmd) Run(binds *Context) error {
+	binds.Store.Commands <- core.GetAccountBalance{
+		Username: a.Username, 
+		AccountName: a.AccountName,
+	}		
+
+	for {
+		select {
+		case <- binds.Ctx.Done():
+			return fmt.Errorf("TIMEOUT OCCURRED: %v", binds.Store.State.Error)
+		case event := <- binds.Store.Events:
+			if v, ok := event.(core.AccountSummed); ok {
+				fmt.Printf(
+					"Account \"%s\" has balance %.2f\n",
+					v.AccountName,
+					v.AccountSum,
+				)
+				return nil
+			}
 			if binds.Store.State.Error != nil {
 				return binds.Store.State.Error
 			}

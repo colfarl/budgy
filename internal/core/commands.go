@@ -11,6 +11,9 @@ func (LoadAllUsers) isCommand() {}
 type CreateUser struct{ Username string }
 func (CreateUser) isCommand() {}
 
+type GetUserBalances struct{ Username string }
+func (GetUserBalances) isCommand() {}
+
 type DeleteUser struct{ Username string }
 func (DeleteUser) isCommand() {}
 
@@ -23,6 +26,9 @@ func (ClearActiveUser) isCommand() {}
 // ============================== Account Commands ==============================
 type CreateAccount struct{Username string; AccountName string}
 func (CreateAccount) isCommand() {}
+
+type GetAccountBalance struct{Username string; AccountName string}
+func (GetAccountBalance) isCommand() {}
 
 type DeleteAccount struct{Username string; AccountName string}
 func (DeleteAccount) isCommand() {}

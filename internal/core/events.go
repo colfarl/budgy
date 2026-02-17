@@ -26,8 +26,16 @@ func (UserCreated) isEvent() {}
 type UserDeleted struct{Username string}
 func (UserDeleted) isEvent() {}
 
+type UserSummed struct{Accounts []SummedAccount}
+func (UserSummed) isEvent() {}
+
 type EffectUnhandled struct{ Kind string }
 func (EffectUnhandled) isEvent() {}
+
+type SummedAccount struct {
+	Name    string
+	Balance float64
+}
 
 // ============================== Account Events ==============================
 type AccountCreated struct {
@@ -47,6 +55,12 @@ func (AccountDeleted) isEvent() {}
 
 type AccountsLoaded struct {AccountNames []string}
 func (AccountsLoaded) isEvent() {}
+
+type AccountSummed struct {
+	AccountName string
+	AccountSum 	float64
+}
+func (AccountSummed) isEvent() {}
 
 // ============================== Transaction Events ==============================
 type Txn struct {

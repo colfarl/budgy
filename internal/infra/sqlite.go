@@ -41,6 +41,9 @@ func (sr SqliteRunner) Run(ctx context.Context, fx core.Effect, emit func(core.E
 	case core.FxDeleteUser:
 		return sr.sqliteDeleteUser(ctx, v, emit)	
 	
+	case core.FxGetUserBalances:
+		return sr.sqliteSumUserAccounts(ctx, v, emit)	
+
 	// ============================== Account ==============================
 	case core.FxCreateAccount:
 		return sr.sqliteCreateAccount(ctx, v, emit)	
@@ -49,9 +52,10 @@ func (sr SqliteRunner) Run(ctx context.Context, fx core.Effect, emit func(core.E
 		return sr.sqliteDeleteAccount(ctx, v, emit)	
 
 	case core.FxLoadAccounts:
-		return sr.sqliteLoadAccounts(ctx, v, emit)	
+		return sr.sqliteLoadAccounts(ctx, v, emit)
 
-
+	case core.FxGetAccountBalance:
+		return sr.sqliteSumAccount(ctx, v, emit)	
 	// ============================== Transactions ==============================
 	case core.FxCreateTxn:
 		return sr.sqliteCreateTxn(ctx, v, emit)	
@@ -567,3 +571,49 @@ func (sr SqliteRunner) sqliteSplitTxn(ctx context.Context, fx core.FxSplitTransa
 	tx.Commit()
 	return true
 }
+
+func (sr SqliteRunner) sqliteSumAccount(ctx context.Context, fx core.FxGetAccountBalance, emit func(core.Event)) bool {	
+	params := database.SumAccountTxnFromNamesParams{
+		Username: fx.Username,
+		AccountName: fx.AccountName,
+	}
+
+	sum, err := sr.Q.SumAccountTxnFromNames(ctx, params)
+	if err != nil {
+		emit(core.DBFailure{Err: err})
+		return true
+	}
+
+	if !sum.Valid {
+		emit(core.GeneralFailure{Err: err})
+		return true
+	}	
+	
+	emit(core.AccountSummed{AccountName: fx.AccountName, AccountSum: sum.Float64})
+	return true
+}
+
+func (sr SqliteRunner) sqliteSumUserAccounts(ctx context.Context, fx core.FxGetUserBalances, emit func(core.Event)) bool {	
+	sums, err := sr.Q.SumAccountFromUsername(ctx, fx.Username)
+	if err != nil {
+		emit(core.DBFailure{Err: err})
+		return true
+	}
+	
+	result := make([]core.SummedAccount, len(sums))
+	for i, v := range sums {
+		if !v.Balance.Valid {
+			emit(core.DBFailure{Err: err})
+			return true
+		}
+
+		result[i] = core.SummedAccount{
+			Name: v.Name,
+			Balance: v.Balance.Float64,
+		}
+	}
+			
+	emit(core.UserSummed{Accounts: result})
+	return true
+}
+
