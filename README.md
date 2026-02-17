@@ -27,6 +27,7 @@ go install ./cmd/budgy
 ## full list of commands
 Usage: budgy <command>
 
+```
 Flags:
   -h, --help    Show context-sensitive help.
 
@@ -86,4 +87,4 @@ Commands:
     list all categories
     
 Run "budgy <command> --help" for more information on a command.
-
+```
