@@ -1,10 +1,21 @@
 # Budgy - A Budgeting App In the Terminal
 
-Canonical personal finance project, but it's in the terminal. TUI is in the works, current state is a usable cli to centralize my personal finances. 
-Budgy supports multiple users, import from csv, transaction splitting and other basic budgetting functionality.
+Canonical personal finance project, but it's in the terminal. TUI is WIP, current state is a stable CLI to centralize my personal finances. 
+This is my first unguided personal project in Go, mainly meant to explore the language.
+
+Budgy supports multiple users, import from CSV, transaction splitting, and other basic budgeting functionality.
+
+## Design
+One of the main goals of this project was to create a flexible backend that could serve to two different UIs. The general flow is as follows:
+User Input -> core.Command -> core.Effect -> core.Event -> UI. Commands capture user intent, effects run all necessary side effects, and event captures
+the result of the command and effects. 
+
+## Known Limitations
+ - money represented as float64, planned move to integer cents
+ - error handling and propagration is flimsy
 
 ## Usage
-This is not intended for external use but I am open to feedback / will provide set up from source instructions.
+
 
 ```
 git clone https://github.com/colfarl/budgy.git
