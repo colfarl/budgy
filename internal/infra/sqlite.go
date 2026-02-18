@@ -44,6 +44,9 @@ func (sr SqliteRunner) Run(ctx context.Context, fx core.Effect, emit func(core.E
 	case core.FxGetUserBalances:
 		return sr.sqliteSumUserAccounts(ctx, v, emit)	
 
+	case core.FxSumTxnByCategory:
+		return sr.sqliteSumTxnByCategory(ctx, v, emit)	
+
 	// ============================== Account ==============================
 	case core.FxCreateAccount:
 		return sr.sqliteCreateAccount(ctx, v, emit)	
@@ -574,8 +577,10 @@ func (sr SqliteRunner) sqliteSplitTxn(ctx context.Context, fx core.FxSplitTransa
 
 func (sr SqliteRunner) sqliteSumAccount(ctx context.Context, fx core.FxGetAccountBalance, emit func(core.Event)) bool {	
 	params := database.SumAccountTxnFromNamesParams{
-		Username: fx.Username,
-		AccountName: fx.AccountName,
+		Name: fx.Username,
+		Name_2: fx.AccountName,
+		OccurredAt: fx.StartDate,
+		OccurredAt_2: fx.EndDate,
 	}
 
 	sum, err := sr.Q.SumAccountTxnFromNames(ctx, params)
@@ -594,7 +599,12 @@ func (sr SqliteRunner) sqliteSumAccount(ctx context.Context, fx core.FxGetAccoun
 }
 
 func (sr SqliteRunner) sqliteSumUserAccounts(ctx context.Context, fx core.FxGetUserBalances, emit func(core.Event)) bool {	
-	sums, err := sr.Q.SumAccountFromUsername(ctx, fx.Username)
+	params := database.SumAccountFromUsernameParams{
+		Name: fx.Username,
+		OccurredAt: fx.StartDate,
+		OccurredAt_2: fx.EndDate,
+	}
+	sums, err := sr.Q.SumAccountFromUsername(ctx, params)
 	if err != nil {
 		emit(core.DBFailure{Err: err})
 		return true
@@ -614,6 +624,38 @@ func (sr SqliteRunner) sqliteSumUserAccounts(ctx context.Context, fx core.FxGetU
 	}
 			
 	emit(core.UserSummed{Accounts: result})
+	return true
+}
+
+func (sr SqliteRunner) sqliteSumTxnByCategory(ctx context.Context, fx core.FxSumTxnByCategory, emit func(core.Event)) bool {	
+	params := database.TxnsByCategoryParams{
+		Name: fx.Username,
+		OccurredAt: fx.StartDate,
+		OccurredAt_2: fx.EndDate,
+		IsIncome: fx.Income,
+	}
+	
+	groups, err := sr.Q.TxnsByCategory(ctx, params)
+	if err != nil {
+		emit(core.DBFailure{Err: err})
+		return true
+	}
+	
+	log.Printf("%v\n", groups)
+	res := make([]core.SummedCategory, len(groups))
+	for i, v := range groups {
+		if !v.Total.Valid {
+			log.Printf("Skipping %v invalid total", v.Name)
+			continue
+		}
+
+		res[i] = core.SummedCategory{
+			Name: v.Name,
+			Amount: v.Total.Float64,		
+		}
+	}
+	
+	emit(core.UserTxnsGrouped{Groups: res})
 	return true
 }
 

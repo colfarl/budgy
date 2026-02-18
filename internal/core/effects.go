@@ -15,8 +15,20 @@ func (FxSetSessionUser) isEffect() {}
 type FxCreateUser struct{ Username *string }
 func (FxCreateUser) isEffect() {}
 
-type FxGetUserBalances struct{ Username string }
+type FxGetUserBalances struct{ 
+	Username string 
+	StartDate int64
+	EndDate int64
+}
 func (FxGetUserBalances) isEffect() {}
+
+type FxSumTxnByCategory struct{ 
+	Username string 
+	StartDate int64
+	EndDate int64
+	Income bool
+}
+func (FxSumTxnByCategory) isEffect() {}
 
 type FxDeleteUser struct{ Username *string }
 func (FxDeleteUser) isEffect() {}
@@ -34,6 +46,8 @@ func (FxCreateAccount) isEffect() {}
 type FxGetAccountBalance struct{
 	Username 	string
 	AccountName string
+	StartDate int64
+	EndDate int64
 }
 func (FxGetAccountBalance) isEffect() {}
 

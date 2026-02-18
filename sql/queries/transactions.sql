@@ -72,7 +72,10 @@ SELECT
 	) as balance
 FROM users u JOIN accounts a ON u.ID = a.user_id
 			 JOIN transactions t ON t.account_id = a.id
-WHERE u.name = sqlc.arg(username) AND a.name = sqlc.arg(account_name);
+WHERE u.name = ? 
+	AND a.name = ?
+	AND t.occurred_at >= ? 
+	AND t.occurred_at <= ?;
 
 -- name: SumAccountFromUsername :many
 SELECT
@@ -85,6 +88,8 @@ SELECT
 	) as balance
 FROM users u JOIN accounts a ON u.ID = a.user_id
 			 JOIN transactions t ON t.account_id = a.id
-WHERE u.name = sqlc.arg(username) 
+WHERE u.name = ? 
+	AND t.occurred_at >= ? 
+	AND t.occurred_at <= ?
 GROUP BY a.name;
 

@@ -11,8 +11,20 @@ func (LoadAllUsers) isCommand() {}
 type CreateUser struct{ Username string }
 func (CreateUser) isCommand() {}
 
-type GetUserBalances struct{ Username string }
+type GetUserBalances struct{ 
+	Username string 
+	StartDate int64
+	EndDate int64
+}
 func (GetUserBalances) isCommand() {}
+
+type SumTxnsByCategory struct{ 
+	Username string 
+	StartDate int64
+	EndDate int64
+	Income	bool
+}
+func (SumTxnsByCategory) isCommand() {}
 
 type DeleteUser struct{ Username string }
 func (DeleteUser) isCommand() {}
@@ -27,7 +39,12 @@ func (ClearActiveUser) isCommand() {}
 type CreateAccount struct{Username string; AccountName string}
 func (CreateAccount) isCommand() {}
 
-type GetAccountBalance struct{Username string; AccountName string}
+type GetAccountBalance struct{
+	Username string
+	AccountName string
+	StartDate int64
+	EndDate int64
+}
 func (GetAccountBalance) isCommand() {}
 
 type DeleteAccount struct{Username string; AccountName string}

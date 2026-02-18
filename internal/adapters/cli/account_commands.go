@@ -15,6 +15,8 @@ type AccountAddCmd struct {
 type AccountBalanceCmd struct {
 	Username string `arg:"" help:"User who owns Account."`
 	AccountName string `arg:"" help:"Account Name."`
+	StartDate string `help:"sum transactions only after this date if passed." short:"s"`
+	EndDate string `help:"sum transactions only before this date if passed." short:"e"`
 }
 
 type AccountDeleteCmd struct {
@@ -97,9 +99,15 @@ func (a *AccountListCmd) Run(binds *Context) error {
 }
 
 func (a *AccountBalanceCmd) Run(binds *Context) error {
+	start, end, err := getStartEndDate(a.StartDate, a.EndDate)
+	if err != nil {
+		return err
+	}
 	binds.Store.Commands <- core.GetAccountBalance{
 		Username: a.Username, 
 		AccountName: a.AccountName,
+		StartDate: start,
+		EndDate: end,
 	}		
 
 	for {

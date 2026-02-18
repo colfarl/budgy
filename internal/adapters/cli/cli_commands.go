@@ -16,6 +16,8 @@ type CliCommands struct {
 		List 		UserListCmd   	`cmd:"" help:"List users."`
 		Delete 		UserDeleteCmd	`cmd:"" help:"Delete a user."`
 		Balances	UserBalancesCmd `cmd:"" help:"list balances for all accounts."`
+		Expense		UserExpenseCmd 	`cmd:"" help:"group expenses by category"`
+		Income		UserIncomeCmd 	`cmd:"" help:"group income by category"`
 	}	`cmd:"" help:"User management."`
 
 	Account struct {

@@ -29,6 +29,14 @@ func (UserDeleted) isEvent() {}
 type UserSummed struct{Accounts []SummedAccount}
 func (UserSummed) isEvent() {}
 
+type SummedCategory struct {
+	Name string
+	Amount float64
+}
+
+type UserTxnsGrouped struct{Groups []SummedCategory}
+func (UserTxnsGrouped) isEvent() {}
+
 type EffectUnhandled struct{ Kind string }
 func (EffectUnhandled) isEvent() {}
 
